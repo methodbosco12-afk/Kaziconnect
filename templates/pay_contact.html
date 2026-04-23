@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pay Contact</title>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: #f5f6fa;
+        }
+
+        .container {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            width: 350px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .card h2 {
+            margin-bottom: 10px;
+        }
+
+        .price {
+            font-size: 22px;
+            color: green;
+            margin-bottom: 20px;
+        }
+
+        .instructions {
+            background: #f1f2f6;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            background: #2f80ed;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        button:hover {
+            background: #1366d6;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="card">
+
+        <h2>Unlock Contact</h2>
+
+        <div class="price">
+            {{ 500 }} TZS
+        </div>
+
+        <div class="instructions">
+            📱 Tuma pesa kwenda:
+            <br><br>
+            M-Pesa: <b>+255799978711</b><br>
+            Jina: <b>METHOD CORNEL JOHN</b>
+        </div>
+
+        <form method="POST" action="{{ url_for('confirm_payment', fundi_id=fundi_id) }}">
+
+            <input type="text" name="phone" placeholder="Namba uliyolipia" required>
+
+            <input type="text" name="transaction_id" placeholder="Transaction ID" required>
+
+            <button type="submit">Confirm Payment</button>
+
+        </form>
+
+    </div>
+
+</div>
+
+</body>
+</html>

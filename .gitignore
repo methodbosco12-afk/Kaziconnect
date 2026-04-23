@@ -1,0 +1,15 @@
+# Python virtual environment
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Uploads (user files)
+uploads/
+
+# Node modules
+node_modules/
+
+# Environment secrets (kama unazo)
+.env

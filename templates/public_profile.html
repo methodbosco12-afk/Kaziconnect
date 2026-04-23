@@ -1,0 +1,192 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fundi Profile</title>
+
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f4f6fb;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 420px;
+            margin: 30px auto;
+            padding: 10px;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 18px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+            text-align: center;
+        }
+
+        /* 🔥 SMALL CIRCLE IMAGE */
+        .profile-img {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #eee;
+            display: block;
+            margin: 10px auto;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        h2 {
+            margin: 8px 0 4px;
+            font-size: 20px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            margin: 4px;
+            color: white;
+        }
+
+        .featured { background: orange; }
+        .boost { background: green; }
+
+        .info {
+            margin-top: 12px;
+            text-align: left;
+            background: #f9fafc;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .info p {
+            margin: 6px 0;
+        }
+
+        .locked {
+            color: red;
+            font-weight: bold;
+        }
+
+        /* 🔥 BUTTON BASE */
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            border-radius: 12px;
+            font-weight: 600;
+            text-align: center;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            transition: 0.25s ease;
+            font-size: 14px;
+        }
+
+        /* Hire Button */
+        .btn-hire {
+            background: linear-gradient(135deg, #007bff, #00c6ff);
+            color: white;
+            box-shadow: 0 8px 20px rgba(0,123,255,0.25);
+        }
+
+        .btn-hire:hover {
+            transform: translateY(-2px);
+        }
+
+        /* WhatsApp Button */
+        .btn-wa {
+            background: linear-gradient(135deg, #25D366, #1ebe5d);
+            color: white;
+            box-shadow: 0 8px 20px rgba(37,211,102,0.25);
+        }
+
+        .btn-wa:hover {
+            transform: translateY(-2px);
+        }
+
+        .section {
+            margin-top: 18px;
+            text-align: left;
+            background: #f9fafc;
+            padding: 12px;
+            border-radius: 10px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 6px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+        .payment-box {
+            background: #fff3cd;
+            border-left: 4px solid orange;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <div class="card">
+
+        <!-- IMAGE -->
+        {% if fundi.image %}
+            <img src="{{ url_for('static', filename='images/' + fundi.image) }}" class="profile-img">
+        {% else %}
+            <img src="{{ url_for('static', filename='images/default.png') }}" class="profile-img">
+        {% endif %}
+
+        <!-- NAME -->
+        <h2>{{ fundi.name }}</h2>
+
+        <!-- BADGES -->
+        {% if fundi.featured_until and fundi.featured_until > now %}
+            <span class="badge featured">⭐ Featured</span>
+        {% endif %}
+
+        {% if fundi.boost_until and fundi.boost_until > now %}
+            <span class="badge boost">🚀 Boosted</span>
+        {% endif %}
+
+        <!-- INFO -->
+        <div class="info">
+            <p><strong>Skills:</strong> {{ fundi.skills }}</p>
+            <p><strong>Experience:</strong> {{ fundi.experience }}</p>
+            <p><strong>Location:</strong> {{ fundi.location }}</p>
+
+            <p><strong>📞 Phone:</strong> {{ fundi.phone }}</p>
+            <p><strong>📧 Email:</strong> {{ fundi.email }}</p>
+
+        <!-- HIRE + WHATSAPP -->
+
+            <form method="POST" action="{{ url_for('hire_fundi', fundi_id=fundi.id) }}">
+                <button class="btn btn-hire">
+                    💼 Hire Me
+                </button>
+            </form>
+
+            <a class="btn btn-wa"
+               href="https://wa.me/{{ fundi.phone | replace('+', '') }}?text=Habari%2C%20nimeona%20profile%20yako%20{{ fundi.name | urlencode }}%20na%20ningependa%20kukuajiri."
+               target="_blank">
+               💬 WhatsApp Chat
+            </a>
+
+    </div>
+</div>
+
+</body>
+</html>

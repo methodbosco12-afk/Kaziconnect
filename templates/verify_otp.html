@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Reset Password</title>
+
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(to right, #4facfe, #00f2fe);
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 100%;
+            max-width: 380px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            text-align: center;
+        }
+
+        h2 {
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-size: 14px;
+        }
+
+        input:focus {
+            border-color: #4facfe;
+            outline: none;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background: #0056b3;
+        }
+
+        .error {
+            color: red;
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+
+        .timer {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #444;
+        }
+
+        .resend {
+            margin-top: 10px;
+            font-size: 13px;
+        }
+
+        .resend a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .resend a:hover {
+            text-decoration: underline;
+        }
+
+        .expired {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="card">
+
+    <h2>🔐 Reset Password</h2>
+    <p class="subtitle">Weka OTP na password mpya</p>
+
+    {% if error %}
+        <div class="error">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST">
+
+        <input type="text" name="otp" placeholder="Enter OTP" required>
+
+        <input type="password" name="password" placeholder="New Password" required>
+
+        <button class="btn">Reset Password</button>
+
+    </form>
+
+    <div class="timer">
+        OTP expires in: <span id="timer">120</span>
+    </div>
+
+    <div class="resend">
+        <a id="resend" href="/resend_otp/{{ identifier }}" style="display:none;">
+            Resend OTP
+        </a>
+    </div>
+
+</div>
+
+<script>
+let timeLeft = 120;
+
+let timer = setInterval(function () {
+    timeLeft--;
+    document.getElementById("timer").innerText = timeLeft + " sec";
+
+    if (timeLeft === 60) {
+        document.getElementById("resend").style.display = "inline";
+    }
+
+    if (timeLeft <= 0) {
+        clearInterval(timer);
+        document.getElementById("timer").innerText = "Expired";
+        document.getElementById("timer").classList.add("expired");
+    }
+}, 1000);
+</script>
+
+</body>
+</html>

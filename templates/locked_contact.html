@@ -1,0 +1,7 @@
+<h3>{{ fundi.name }}</h3>
+<p>📍 {{ fundi.location }}</p>
+<p>🔒 Contact locked</p>
+
+<form method="POST" action="/request_contact/{{ fundi.id }}">
+    <button>Unlock Contact - 500 TZS</button>
+</form>

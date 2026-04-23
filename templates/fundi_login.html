@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Fundi Login</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #4a90e2, #6c63ff);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* LOGIN CARD */
+.login-box {
+    width: 360px;
+    background: white;
+    padding: 35px;
+    border-radius: 15px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+    text-align: center;
+    animation: fadeIn 0.6s ease-in-out;
+}
+
+/* TITLE */
+.login-box h2 {
+    margin-bottom: 20px;
+    color: #333;
+}
+
+/* INPUTS */
+.login-box input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    outline: none;
+    transition: 0.3s;
+}
+
+.login-box input:focus {
+    border-color: #4a90e2;
+    box-shadow: 0 0 5px rgba(74,144,226,0.5);
+}
+
+/* BUTTON */
+.login-box button {
+    width: 100%;
+    padding: 12px;
+    background: #4a90e2;
+    border: none;
+    color: white;
+    border-radius: 10px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.login-box button:hover {
+    background: #357ab8;
+}
+
+/* ERROR */
+.error {
+    color: red;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+/* EXTRA LINKS */
+.extra {
+    margin-top: 10px;
+    font-size: 13px;
+}
+
+.extra a {
+    color: #4a90e2;
+    text-decoration: none;
+}
+
+/* SHOW PASSWORD */
+.show-pass {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    font-size: 13px;
+    gap: 5px;
+    margin-top: 5px;
+}
+
+/* ANIMATION */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="login-box">
+
+    <h2>🔐 Fundi Login</h2>
+
+    {% if error %}
+        <div class="error">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST">
+
+        <input type="text" name="identifier" placeholder="Enter Email or Phone" required>
+
+        <input type="password" id="password" name="password" placeholder="Enter Password" required>
+
+        <div class="show-pass">
+            <input type="checkbox" onclick="togglePassword()"> Show Password
+        </div>
+
+        <div class="show-pass">
+            <input type="checkbox" name="remember"> Remember Me
+        </div>
+
+        <button type="submit">Login</button>
+
+    </form>
+
+    <div class="extra">
+        <a href="/forgot_password">Forgot Password?</a>
+    </div>
+
+</div>
+
+<script>
+function togglePassword() {
+    let x = document.getElementById("password");
+    x.type = (x.type === "password") ? "text" : "password";
+}
+</script>
+
+</body>
+</html>

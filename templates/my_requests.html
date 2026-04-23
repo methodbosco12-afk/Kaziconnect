@@ -1,0 +1,14 @@
+<h2>Maombi Yangu</h2>
+
+{% for r in requests %}
+  <p>
+    {{ r.type }} - 
+    {% if r.status == "pending" %}
+      ⏳ Pending
+    {% elif r.status == "approved" %}
+      ✅ Approved
+    {% else %}
+      ❌ Rejected
+    {% endif %}
+  </p>
+{% endfor %}

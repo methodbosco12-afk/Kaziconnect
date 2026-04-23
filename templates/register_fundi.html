@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register Fundi</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f6f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            width: 350px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
+
+        input:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+
+        input[type="file"] {
+            border: none;
+        }
+
+        .password-box {
+            position: relative;
+        }
+
+        .toggle {
+            position: absolute;
+            right: 10px;
+            top: 12px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #3498db, #00c6ff);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .link {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .link a {
+            text-decoration: none;
+            color: #3498db;
+        }
+
+        .error {
+            color: red;
+            font-size: 13px;
+            text-align: center;
+        }
+    </style>
+
+</head>
+<body>
+
+<script>
+function togglePassword(id) {
+    const input = document.getElementById(id);
+    input.type = input.type === "password" ? "text" : "password";
+}
+
+// ✅ confirm password validation
+function validateForm() {
+    const pass = document.getElementById("password").value;
+    const confirm = document.getElementById("confirm_password").value;
+
+    if (pass !== confirm) {
+        alert("Passwords hazifanani!");
+        return false;
+    }
+
+    if (pass.length < 6) {
+        alert("Password lazima iwe angalau herufi 6");
+        return false;
+    }
+
+    return true;
+}
+</script>
+
+<div class="container">
+
+    <h2>Register as Fundi</h2>
+
+    <form method="POST" enctype="multipart/form-data" onsubmit="return validateForm()">
+
+        <input type="text" name="name" placeholder="Full Name" required>
+
+        <input type="text" name="skills" placeholder="Skills (e.g electrician)" required>
+
+        <input type="text" name="experience" placeholder="Experience (e.g 3 years)" required>
+
+        <input type="text" name="phone" placeholder="Phone Number" required>
+
+        <input type="email" name="email" placeholder="Email" required>
+        
+        <input type="text" name="location" placeholder="Location" required>
+
+        <!-- PASSWORD -->
+        <div class="password-box">
+            <input type="password" name="password" id="password" placeholder="Password" required>
+            <span class="toggle" onclick="togglePassword('password')">👁️</span>
+        </div>
+
+        <!-- CONFIRM PASSWORD -->
+        <div class="password-box">
+            <input type="password" name="confirm_password" id="confirm_password" placeholder="Confirm Password" required>
+            <span class="toggle" onclick="togglePassword('confirm_password')">👁️</span>
+        </div>
+
+        <input type="file" name="image" required>
+
+        <button type="submit">Register</button>
+
+    </form>
+
+    <div class="link">
+        <a href="/login/fundi">Already have account? Login</a>
+    </div>
+
+</div>
+
+</body>
+</html>

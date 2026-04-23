@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Fundi Updates</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f6f9;
+        }
+
+        .container {
+            width: 90%;
+            margin: auto;
+            margin-top: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th {
+            background: #222;
+            color: white;
+            padding: 12px;
+        }
+
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+        }
+
+        tr:hover {
+            background: #f0f0f0;
+        }
+
+        .badge {
+            padding: 5px 10px;
+            border-radius: 5px;
+            background: #007bff;
+            color: white;
+        }
+
+        .old {
+            color: red;
+        }
+
+        .new {
+            color: green;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h2>📊 Fundi Profile Updates</h2>
+
+    <table>
+        <tr>
+            <th>Fundi ID</th>
+            <th>Field</th>
+            <th>Old Value</th>
+            <th>New Value</th>
+            <th>Date</th>
+        </tr>
+
+        {% for u in updates %}
+        <tr>
+            <td>{{ u.fundi_id }}</td>
+            <td><span class="badge">{{ u.field_changed }}</span></td>
+            <td class="old">{{ u.old_value }}</td>
+            <td class="new">{{ u.new_value }}</td>
+            <td>{{ u.created_at }}</td>
+        </tr>
+        {% endfor %}
+
+    </table>
+
+</div>
+
+</body>
+</html>

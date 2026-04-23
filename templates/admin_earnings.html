@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Earnings</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f6f9;
+            margin: 0;
+        }
+
+        .container {
+            width: 90%;
+            margin: 30px auto;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+        }
+
+        .card {
+            padding: 20px;
+            border-radius: 12px;
+            color: white;
+        }
+
+        .blue { background: #2f80ed; }
+        .green { background: #27ae60; }
+        .orange { background: #f39c12; }
+        .purple { background: #6c5ce7; }
+
+        table {
+            width: 100%;
+            margin-top: 25px;
+            background: white;
+            border-collapse: collapse;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th {
+            background: #2f80ed;
+            color: white;
+            padding: 12px;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .btn {
+            padding: 6px 10px;
+            border-radius: 6px;
+            text-decoration: none;
+            color: white;
+            font-size: 13px;
+        }
+
+        .approve { background: #27ae60; }
+        .reject { background: #eb5757; }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h2>📊 Earnings Dashboard</h2>
+
+    <!-- CARDS -->
+    <div class="cards">
+
+        <div class="card blue">
+            <h3>Total Earnings</h3>
+            <h2>{{ total_earnings }} TZS</h2>
+        </div>
+
+        <div class="card green">
+            <h3>Contact Earnings</h3>
+            <h2>{{ contact_total }} TZS</h2>
+        </div>
+
+        <div class="card orange">
+            <h3>Featured Earnings</h3>
+            <h2>{{ featured_total }} TZS</h2>
+        </div>
+
+        <div class="card purple">
+            <h3>Boost Earnings</h3>
+            <h2>{{ boost_total }} TZS</h2>
+        </div>
+
+    </div>
+
+    <!-- RECENT CONTACT PAYMENTS -->
+    <h3 style="margin-top:30px;">💰 Contact Payments</h3>
+
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Fundi</th>
+            <th>Amount</th>
+            <th>Status</th>
+        </tr>
+
+        {% for p in recent_contacts %}
+        <tr>
+            <td>{{ p.id }}</td>
+            <td>{{ p.fundi_id }}</td>
+            <td>{{ p.amount }}</td>
+            <td>{{ "Paid" if p.is_paid else "Pending" }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <!-- FEATURE + BOOST -->
+    <h3 style="margin-top:30px;">⭐ Feature & 🚀 Boost Requests</h3>
+
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Fundi</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
+
+        {% for r in recent_features %}
+        <tr>
+            <td>{{ r.id }}</td>
+            <td>{{ r.fundi_id }}</td>
+            <td>{{ r.type }}</td>
+            <td>{{ r.status }}</td>
+
+            <td>
+                {% if r.status == 'pending' %}
+                    <a class="btn approve" href="{{ url_for('approve_feature', id=r.id) }}">Approve</a>
+                    <a class="btn reject" href="{{ url_for('reject_request', id=r.id) }}">Reject</a>
+                {% else %}
+                    ✔
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+
+    </table>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial;
+            background: #f4f6f9;
+        }
+
+        .container {
+            width: 90%;
+            margin: 30px auto;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            padding: 20px;
+            border-radius: 15px;
+            color: white;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .card h3 {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        .card p {
+            font-size: 26px;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .blue { background: #2f80ed; }
+        .green { background: #27ae60; }
+        .orange { background: #f39c12; }
+        .purple { background: #6c5ce7; }
+        .red { background: #eb5757; }
+        .dark { background: #2d3436; }
+
+        .links {
+            margin-top: 30px;
+        }
+
+        .links a {
+            display: inline-block;
+            margin-right: 10px;
+            padding: 10px 15px;
+            background: #2f80ed;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h2>📊 Admin Dashboard</h2>
+
+    <div class="cards">
+
+        <div class="card blue">
+            <h3>Total Contact Requests</h3>
+            <p>{{ total_contacts }}</p>
+        </div>
+
+        <div class="card green">
+            <h3>Paid Contacts</h3>
+            <p>{{ paid_contacts }}</p>
+        </div>
+
+        <div class="card orange">
+            <h3>Pending Contacts</h3>
+            <p>{{ pending_contacts }}</p>
+        </div>
+
+        <div class="card purple">
+            <h3>Total Earnings (TZS)</h3>
+            <p>{{ contact_earnings }}</p>
+        </div>
+
+        <div class="card blue">
+            <h3>Featured Profiles ⭐</h3>
+            <p>{{ featured_count }}</p>
+        </div>
+
+        <div class="card dark">
+            <h3>Boosted Profiles 🚀</h3>
+            <p>{{ boost_count }}</p>
+        </div>
+
+        <div class="card red">
+            <h3>Pending Requests</h3>
+            <p>{{ pending_requests }}</p>
+        </div>
+
+    </div>
+
+    <div class="links">
+        <a href="{{ url_for('admin_contact_payments') }}">💰 Contact Payments</a>
+        <a href="{{ url_for('featured_requests') }}">⭐ Feature & Boost</a>
+        <a href="{{ url_for('admin_earnings') }}">📈 Earnings</a>
+    </div>
+
+</div>
+
+</body>
+</html>

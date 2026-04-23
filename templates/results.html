@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Results</title>
+
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #f4f6fb;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 10px;
+        }
+
+        .title {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 5px;
+            color: #222;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        /* CARD */
+        .fundi-item {
+            background: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 16px;
+            margin: 10px 0;
+            border-radius: 14px;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+            transition: 0.25s ease;
+        }
+
+        .fundi-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 22px rgba(0,0,0,0.10);
+        }
+
+        /* LEFT SIDE */
+        .left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .number {
+            font-weight: bold;
+            color: #888;
+            width: 25px;
+        }
+
+        .name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #222;
+        }
+
+        /* BUTTON */
+        .view-btn {
+            background: linear-gradient(135deg, #007bff, #00c6ff);
+            color: white;
+            padding: 8px 14px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            transition: 0.2s ease;
+        }
+
+        .view-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* FEATURED BADGE */
+        .featured-badge {
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            display: inline-block;
+            animation: pulse 1.5s infinite;
+            margin-left: 6px;
+        }
+
+        /* BOOST */
+        .boosted {
+            color: orange;
+            font-weight: bold;
+            margin-left: 6px;
+            font-size: 13px;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.08);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* NO RESULTS */
+        .no-results {
+            text-align: center;
+            color: red;
+            font-weight: bold;
+            margin-top: 50px;
+        }
+
+        /* MOBILE */
+        @media (max-width: 600px) {
+            .fundi-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .view-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+
+    </style>
+</head>
+
+<body>
+
+{% if results|length > 0 %}
+
+<div class="container">
+
+    <h2 class="title">Search Results</h2>
+
+    <div class="subtitle">
+        🔍 Found {{ results|length }} fundi
+    </div>
+
+    {% for fundi in results %}
+
+    <div class="fundi-item">
+
+        <div class="left">
+            <div class="number">
+                {{ loop.index }}.
+            </div>
+
+            <div class="name">
+                {{ fundi.name }}
+
+                {% if fundi.boost_until and fundi.boost_until > now %}
+                    <span class="boosted">🔥 Boosted</span>
+
+                {% elif fundi.featured_until and fundi.featured_until > now %}
+                    <span class="featured-badge">⭐ Featured</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <a class="view-btn" href="{{ url_for('profile', id=fundi.id) }}">
+            View Profile
+        </a>
+
+    </div>
+
+    {% endfor %}
+
+</div>
+
+{% else %}
+
+<div class="no-results">
+    ❌ No matching fundi found
+</div>
+
+{% endif %}
+
+</body>
+</html>

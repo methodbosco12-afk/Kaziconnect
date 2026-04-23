@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Update Profile</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #f5f7fb;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 40px auto;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <div class="card">
+
+        <h2>Update Profile</h2>
+
+        <!-- CURRENT IMAGE -->
+        {% if fundi.image %}
+            <img src="{{ url_for('static', filename='images/' + fundi.image) }}">
+        {% endif %}
+
+        <form method="POST" enctype="multipart/form-data">
+
+            <input type="text" name="name" value="{{ fundi.name }}" placeholder="Name">
+
+            <input type="text" name="skills" value="{{ fundi.skills }}" placeholder="Skills">
+
+            <input type="text" name="experience" value="{{ fundi.experience }}" placeholder="Experience">
+
+            <input type="text" name="location" value="{{ fundi.location }}" placeholder="Location">
+
+            <input type="text" name="phone" value="{{ fundi.phone }}" placeholder="Phone">
+
+            <input type="email" name="email" value="{{ fundi.email }}" placeholder="Email">
+
+            <input type="file" name="image">
+            <hr>
+
+            <h3>🔐 Badilisha Password</h3>
+
+            <input type="password" name="current_password" placeholder="Current Password">
+
+            <input type="password" name="new_password" placeholder="New Password">
+
+            <input type="password" name="confirm_password" placeholder="Confirm New Password">
+
+            <button type="submit">Update Profile</button>
+
+        </form>
+
+    </div>
+</div>
+
+</body>
+</html>

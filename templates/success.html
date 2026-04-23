@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Payment Success</title>
+</head>
+
+<body style="font-family:Arial; text-align:center; padding:50px;">
+
+    <h2 style="text-align:center; margin-top:50px;">
+
+{% if type == "boost" %}
+    🚀 Ombi lako la Boost limepokelewa!
+    <br><br>
+    Utakapothibitishwa utaonekana juu ya wengine kwa siku 3.
+
+{% elif type == "featured" %}
+    ⭐ Ombi lako la Featured limepokelewa!
+    <br><br>
+    Utakapothibitishwa utaonekana kama Featured kwa siku 30.
+
+{% else %}
+    ✅ Request sent! Subiri approval.
+
+{% endif %}
+
+</h2>
+<p style="text-align:center; color:#555;">
+    Tutakujulisha baada ya kuthibitisha malipo yako.
+</p>
+
+<p style="text-align:center; color:#555;">
+    Tafadhali hakikisha umeweka Transaction ID sahihi.
+</p>
+    <a href="/" style="text-decoration:none; color:white; background:#3498db; padding:10px 20px; border-radius:8px;">
+        Go Home
+    </a>
+
+</body>
+</html>

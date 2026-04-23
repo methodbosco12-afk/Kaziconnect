@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Search Fundi</title>
+
+    <!-- 🔥 HAPA NDIPO UNAWEKA HII CSS -->
+    <style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f5f7fa;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 100px;
+}
+
+.title {
+    font-size: 28px;
+    margin-bottom: 25px;
+    color: #2c3e50;
+}
+
+.search-box {
+    display: flex;
+    gap: 10px;
+    background: white;
+    padding: 15px;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+.search-box input {
+    padding: 12px;
+    width: 200px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    outline: none;
+    transition: 0.3s;
+}
+
+.search-box input:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 6px rgba(52,152,219,0.4);
+}
+
+.search-box button {
+    padding: 12px 18px;
+    background: #3498db;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.search-box button:hover {
+    background: #1f6fa5;
+    transform: scale(1.05);
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="title">
+        🔍 Find Skilled Mafundi Near You
+    </div>
+
+    <div class="search-box">
+        <form method="GET" action="/results">
+            <input type="text" name="skill" placeholder="Skill">
+            <input type="text" name="experience" placeholder="Experience">
+            <input type="text" name="location" placeholder="Location">
+            <button type="submit">Search</button>
+        </form>
+    </div>
+
+</div>
+
+</body>
+</html>
