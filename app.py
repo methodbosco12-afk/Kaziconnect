@@ -106,7 +106,16 @@ def send_otp_sms(phone, otp):
 app = Flask(__name__, instance_relative_config=True)
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY")
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'instance','database.db')
+
+uri = os.environ.get("DATABASE_URL")
+
+if not uri:
+    uri = "sqlite:///app.db"
+
+if uri.startswith("postgres://"):
+    uri = uri.replace("postgres://", "postgresql://", 1)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = uri
 
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 
@@ -232,12 +241,6 @@ def search():
         ))
 
     query = FundiProfile.query
-
-    query = query.filter(
-        (FundiProfile.featured_until == None) |
-        (FundiProfile.featured_until > datetime.utcnow())
-    )
-
     if skill:
         query = query.filter(FundiProfile.skills.contains(skill))
 
