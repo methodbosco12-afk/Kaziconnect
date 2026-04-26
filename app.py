@@ -1,17 +1,17 @@
 
 from flask import Flask, render_template, request, redirect, url_for, session
+from datetime import datetime, timedelta, timezone
 from database import db
-from models import ProfileUpdate
-from models import User, FundiProfile, FeaturedRequest, OTP, ContactUnlock
+from models import User, FundiProfile, FeaturedRequest, OTP, ContactUnlock,IpBlock,ActivityLog,ProfileUpdate
 import os
 import time
+from dotenv import load_dotenv
+
+load_dotenv()
 import random
 
 import africastalking
-from models import ActivityLog
 from functools import wraps
-from models import IpBlock
-from database import db
 from auth.admin_seed import create_admin
 
 
@@ -59,8 +59,11 @@ def contractor_required(f):
 requests_per_ip = {}
 blocked_ips = {}
 
-username = "sandbox"  # badilisha ukienda production
-api_key = "YOUR_API_KEY"
+username = "sandbox"
+api_key = os.getenv("AFRICASTALKING_API_KEY")
+
+if not api_key:
+    raise Exception("AFRICASTALKING_API_KEY missing in environment variables")
 
 africastalking.initialize(username, api_key)
 sms = africastalking.SMS
@@ -70,10 +73,10 @@ from datetime import datetime, timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
 from werkzeug.security import generate_password_hash, check_password_hash
 def is_featured_active(fundi):
-    return fundi.featured_until and fundi.featured_until > datetime.utcnow()
+    return fundi.featured_until and fundi.featured_until > datetime.now(timezone.utc)
 
 def is_boost_active(fundi):
-    return fundi.boost_until and fundi.boost_until > datetime.utcnow() and is_featured_active(fundi)
+    return fundi.boost_until and fundi.boost_until > datetime.now(timezone.utc) and is_featured_active(fundi)
 
 def format_phone(phone):
     phone = phone.strip().replace(" ", "")
@@ -105,7 +108,7 @@ def send_otp_sms(phone, otp):
 
 app = Flask(__name__, instance_relative_config=True)
 basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY")
+app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY") or "supersecretkey123"
 
 uri = os.environ.get("DATABASE_URL")
 
@@ -124,9 +127,13 @@ app.config[ 'UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 db.init_app(app)
 
+with app.app_context():
+    print("🔥 DATABASE:", db.engine.url)
+    db.create_all()
+
 @app.context_processor
 def inject_now():
-    return {'now': datetime.utcnow()}
+    return {'now': datetime.now(timezone.utc)}
 
 @app.route('/check_admin')
 def check_admin():
@@ -140,7 +147,7 @@ def check_admin():
 def expire_jobs():
     with app.app_context():
 
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
         # 🔥 EXPIRE FEATURED
         FundiProfile.query.filter(
@@ -179,12 +186,15 @@ def admin_login():
 
     if request.method == 'POST':
 
-        email = request.form['email']
-        password = request.form['password']
+        email = request.form.get('email')
+        password = request.form.get('password')
+
+        if not email or not password:
+            return render_template("admin_login.html", error="All fields required")
 
         admin = User.query.filter_by(email=email, role='admin').first()
 
-        if not admin:
+        if not admin or not admin.password:
             return render_template("admin_login.html", error="Invalid credentials")
 
         if not check_password_hash(admin.password, password):
@@ -226,26 +236,26 @@ def reset_admin():
 @app.route('/search', methods=['GET'])
 def search():
 
-    skill = request.args.get('skill', '').strip()
-    experience = request.args.get('experience', '').strip()
-    location = request.args.get('location', '').strip()
+    ujuzi = (request.args.get('ujuzi') or '').strip()
+    uzoefu = (request.args.get('uzoefu') or '').strip()
+    location = (request.args.get('location') or '').strip()
 
     # 🔁 clean redirect (important fix)
     if request.args and not request.args.get('submitted'):
         return redirect(url_for(
             'search',
-            skill=skill,
-            experience=experience,
+            ujuzi=ujuzi,
+            uzoefu=uzoefu,
             location=location,
             submitted=1
         ))
 
     query = FundiProfile.query
-    if skill:
-        query = query.filter(FundiProfile.skills.contains(skill))
+    if ujuzi:
+        query = query.filter(FundiProfile.ujuzi.contains(ujuzi))
 
-    if experience:
-        query = query.filter(FundiProfile.experience.contains(experience))
+    if uzoefu:
+        query = query.filter(FundiProfile.uzoefu.contains(uzoefu))
 
     if location:
         query = query.filter(FundiProfile.location.contains(location))
@@ -254,27 +264,33 @@ def search():
 
     results = sorted(
         results,
-        key=lambda f: f.featured_until is not None and f.featured_until > datetime.utcnow(),
+        key=lambda f: f.featured_until is not None and f.featured_until > datetime.now(timezone.utc),
         reverse=True
     )
 
     return render_template("search.html", results=results)
 
+@app.route('/init_db')
+def init_db():
+    with app.app_context():
+        db.create_all()
+    return "DB tables created"
+
 @app.route('/results', methods=['GET'])
 def results():
 
-    skill = request.args.get('skill')
-    experience = request.args.get('experience')
+    ujuzi = request.args.get('ujuzi')
+    uzoefu = request.args.get('uzoefu')
     location = request.args.get('location')
 
     query = FundiProfile.query
 
     # 🔥 filters
-    if skill:
-        query = query.filter(FundiProfile.skills.contains(skill))
+    if ujuzi:
+        query = query.filter(FundiProfile.ujuzi.contains(ujuzi))
 
-    if experience:
-        query = query.filter(FundiProfile.experience.contains(experience))
+    if uzoefu:
+        query = query.filter(FundiProfile.uzoefu.contains(uzoefu))
 
     if location:
         query = query.filter(FundiProfile.location.contains(location))
@@ -283,9 +299,9 @@ def results():
 
     # 🚀 SORTING LOGIC
     def sort_key(f):
-        if f.boost_until and f.boost_until > datetime.utcnow():
+        if f.boost_until and f.boost_until > datetime.now(timezone.utc):
             return 3   # 🚀 boost (juu kabisa)
-        elif f.featured_until and f.featured_until > datetime.utcnow():
+        elif f.featured_until and f.featured_until > datetime.now(timezone.utc):
             return 2   # ⭐ featured
         else:
             return 1   # normal
@@ -295,7 +311,7 @@ def results():
     return render_template(
         "results.html",
         results=fundis,
-        now=datetime.utcnow()
+        now=datetime.now(timezone.utc)
     )
 
     # =========================
@@ -611,8 +627,8 @@ def register_fundi():
 
         # 🔹 GET FORM DATA
         name = request.form.get('name')
-        skills = request.form.get('skills')
-        experience = request.form.get('experience')
+        ujuzi = request.form.get('ujuzi')
+        uzoefu = request.form.get('uzoefu')
         phone = request.form.get('phone').strip().replace(" ", "")
         email = request.form.get('email').lower().strip()
         location = request.form.get('location')
@@ -665,8 +681,8 @@ def register_fundi():
         fundi = FundiProfile(
             user_id=user.id,
             name=name,
-            skills=skills,
-            experience=experience,
+            ujuzi=ujuzi,
+            uzoefu=uzoefu,
             phone=phone,
             email=email,
             image=unique_name,
@@ -712,8 +728,8 @@ def update_profile():
 
         # 🔹 BASIC INFO
         fundi.name = request.form.get('name')
-        fundi.skills = request.form.get('skills')
-        fundi.experience = request.form.get('experience')
+        fundi.ujuzi = request.form.get('ujuzi')
+        fundi.uzoefu = request.form.get('uzoefu')
         fundi.location = request.form.get('location')
         fundi.phone = request.form.get('phone')
         fundi.email = request.form.get('email')
@@ -830,7 +846,7 @@ def admin_dashboard():
     ).count()
 
     # TOTAL EARNINGS
-    featured_earnings = approved_featured * 5000
+    featured_earnings = approved_featured * 3000
     boost_earnings = approved_boost * 2000
     total_earnings = contact_earnings + featured_earnings + boost_earnings
 
@@ -880,7 +896,7 @@ def profile(id):
         is_owner=is_owner,
         is_contractor=is_contractor,
         role=role,
-        now=datetime.utcnow()
+        now=datetime.now(timezone.utc)
     )
 
 # 💼 HIRE FUNDI ROUTE
@@ -924,7 +940,7 @@ def boost_profile(id):
     if not is_featured_active(fundi):
         return "❌ Lazima uwe Featured active kabla ya Boost"
 
-    fundi.boost_until = datetime.utcnow() + timedelta(days=3)
+    fundi.boost_until = datetime.now(timezone.utc) + timedelta(days=3)
 
     db.session.commit()
 
@@ -934,7 +950,7 @@ def boost_profile(id):
 def feature_fundi(id):
     fundi = FundiProfile.query.get_or_404(id)
     
-    fundi.featured_until = datetime.utcnow() + timedelta(days=30)
+    fundi.featured_until = datetime.now(timezone.utc) + timedelta(days=30)
 
     db.session.commit()
     return "Fundi amefanywa Featured ⭐ kwa siku 30"
@@ -1029,7 +1045,7 @@ def admin_earnings():
     # 📊 FEATURED + BOOST (assume price)
     featured_total = FeaturedRequest.query.filter_by(
         status="approved", type="featured"
-    ).count() * 5000
+    ).count() * 3000
 
     boost_total = FeaturedRequest.query.filter_by(
         status="approved", type="boost"
@@ -1039,7 +1055,7 @@ def admin_earnings():
     total_earnings = contact_total + featured_total + boost_total
 
     # 📅 TODAY EARNINGS
-    today = datetime.utcnow().date()
+    today = datetime.now(timezone.utc).date()
 
     today_contact = sum(
         p.amount for p in ContactUnlock.query.filter_by(is_paid=True).all()
@@ -1113,14 +1129,14 @@ def approve_feature(id):
     fundi = FundiProfile.query.get(req.fundi_id)
 
     if req.type == "featured":
-        fundi.featured_until = datetime.utcnow() + timedelta(days=30)
+        fundi.featured_until = datetime.now(timezone.utc) + timedelta(days=30)
 
     elif req.type == "boost":
 
         if not is_featured_active(fundi):
             return "Must be featured first"
 
-        fundi.boost_until = datetime.utcnow() + timedelta(days=3)
+        fundi.boost_until = datetime.now(timezone.utc) + timedelta(days=3)
 
     req.status = "approved"
 
@@ -1136,7 +1152,7 @@ def approve_contact(id):
 
     payment.status = "approved"
     payment.is_paid = True
-    payment.expires_at = datetime.utcnow() + timedelta(days=7)
+    payment.expires_at = datetime.now(timezone.utc) + timedelta(days=7)
 
     db.session.commit()
 
@@ -1171,8 +1187,6 @@ def hire_requests():
     return render_template("admin_hire_requests.html", requests=requests)
 
 if __name__ == '__main__':
-  with app.app_context():
-    db.create_all()
 
     admin = User.query.filter_by(role='admin').first()
 
@@ -1196,9 +1210,13 @@ if __name__ == '__main__':
 
     scheduler = BackgroundScheduler()
     scheduler.add_job(expire_jobs, 'interval', minutes=3)
-    scheduler.start()
+    if os.environ.get("RENDER"):
+        pass
+    else:
+        scheduler.start()
 
     import atexit 
     atexit.register(lambda: scheduler.shutdown())
 
-    app.run()
+    if __name__ == "__main__":
+        app.run(host="0.0.0.0", port=10000)

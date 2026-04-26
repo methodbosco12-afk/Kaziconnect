@@ -1,10 +1,16 @@
-
 from database import db
-from datetime import datetime
+from datetime import datetime, timezone
+
+
+# 🕒 UTC helper (best practice)
+def utc_now():
+    return datetime.now(timezone.utc)
 
 
 # 👤 USERS
 class User(db.Model):
+    __tablename__ = "user"
+
     id = db.Column(db.Integer, primary_key=True)
 
     phone = db.Column(db.String(20), unique=True, nullable=True)
@@ -15,15 +21,23 @@ class User(db.Model):
 
     is_blocked = db.Column(db.Boolean, default=False)
 
+
 # 👷 FUNDI PROFILE
 class FundiProfile(db.Model):
+    __tablename__ = "fundi_profile"
+
     id = db.Column(db.Integer, primary_key=True)
 
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, unique=True)
+    user_id = db.Column(
+        db.Integer,
+        db.ForeignKey('users.id'),
+        nullable=False,
+        unique=True
+    )
 
     name = db.Column(db.String(100))
-    skills = db.Column(db.String(200))
-    experience = db.Column(db.String(200))
+    ujuzi = db.Column(db.String(200))
+    uzoefu = db.Column(db.String(200))
     phone = db.Column(db.String(20))
     email = db.Column(db.String(100))
     image = db.Column(db.String(200))
@@ -35,6 +49,8 @@ class FundiProfile(db.Model):
 
 # ⭐ FEATURE / BOOST REQUEST
 class FeaturedRequest(db.Model):
+    __tablename__ = "featured_request"
+
     id = db.Column(db.Integer, primary_key=True)
 
     fundi_id = db.Column(db.Integer, db.ForeignKey('fundi_profile.id'))
@@ -46,11 +62,13 @@ class FeaturedRequest(db.Model):
     status = db.Column(db.String(20), default="pending")
     type = db.Column(db.String(20))  # featured / boost
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utc_now)
 
 
 # 🔐 OTP SYSTEM
 class OTP(db.Model):
+    __tablename__ = "otp"
+
     id = db.Column(db.Integer, primary_key=True)
 
     identifier = db.Column(db.String(120), nullable=False)
@@ -59,8 +77,10 @@ class OTP(db.Model):
     resends = db.Column(db.Integer, default=0)
 
 
-# 💰 CONTACT UNLOCK (500 TZS)
+# 💰 CONTACT UNLOCK
 class ContactUnlock(db.Model):
+    __tablename__ = "contact_unlock"
+
     id = db.Column(db.Integer, primary_key=True)
 
     contractor_id = db.Column(db.Integer, nullable=False)
@@ -76,22 +96,26 @@ class ContactUnlock(db.Model):
 
     is_paid = db.Column(db.Boolean, default=False)
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utc_now)
     expires_at = db.Column(db.DateTime, nullable=True)
 
 
 # 🧾 ADMIN LOGS
 class ActivityLog(db.Model):
+    __tablename__ = "activity_log"
+
     id = db.Column(db.Integer, primary_key=True)
 
     user_id = db.Column(db.Integer)
     action = db.Column(db.String(200))
 
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    timestamp = db.Column(db.DateTime, default=utc_now)
 
 
 # 🔒 IP BLOCKING (ANTI-BRUTE FORCE)
 class IpBlock(db.Model):
+    __tablename__ = "ip_block"
+
     id = db.Column(db.Integer, primary_key=True)
 
     ip = db.Column(db.String(50), unique=True, nullable=False)
@@ -100,19 +124,20 @@ class IpBlock(db.Model):
     last_attempt = db.Column(db.Float)
     blocked_until = db.Column(db.Float, nullable=True)
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utc_now)
     count = db.Column(db.Integer, default=5)
 
-from datetime import datetime
-from database import db
 
+# 🧾 PROFILE UPDATE LOG
 class ProfileUpdate(db.Model):
+    __tablename__ = "profile_update"
+
     id = db.Column(db.Integer, primary_key=True)
 
     fundi_id = db.Column(db.Integer, db.ForeignKey('fundi_profile.id'))
-    
+
     field_changed = db.Column(db.String(50))
     old_value = db.Column(db.String(255))
     new_value = db.Column(db.String(255))
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=utc_now)
