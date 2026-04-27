@@ -6,9 +6,9 @@ from models import User, FundiProfile, FeaturedRequest, OTP, ContactUnlock,IpBlo
 import os
 import time
 from dotenv import load_dotenv
-
 load_dotenv()
 import random
+import models
 
 import africastalking
 from functools import wraps
@@ -1188,35 +1188,34 @@ def hire_requests():
 
 if __name__ == '__main__':
 
-    admin = User.query.filter_by(role='admin').first()
+    with app.app_context():
 
-    if not admin:
-        from werkzeug.security import generate_password_hash
+        admin = User.query.filter_by(role='admin').first()
 
-        admin = User(
-            email="methodbosco12@gmail.com",
-            phone="0700000000",
-            password=generate_password_hash("Method@123"),
-            role="admin"
-        )
+        if not admin:
+            from werkzeug.security import generate_password_hash
 
-        db.session.add(admin)
-        db.session.commit()
+            admin = User(
+                email="methodbosco12@gmail.com",
+                phone="0700000000",
+                password=generate_password_hash("Method@123"),
+                role="admin"
+            )
 
-        print("✅ Admin created")
-    else:
-        print("ℹ️ Admin already exists")
-        
+            db.session.add(admin)
+            db.session.commit()
+
+            print("✅ Admin created")
+        else:
+            print("ℹ️ Admin already exists")
 
     scheduler = BackgroundScheduler()
     scheduler.add_job(expire_jobs, 'interval', minutes=3)
-    if os.environ.get("RENDER"):
-        pass
-    else:
+
+    if not os.environ.get("RENDER"):
         scheduler.start()
 
-    import atexit 
+    import atexit
     atexit.register(lambda: scheduler.shutdown())
 
-    if __name__ == "__main__":
-        app.run(host="0.0.0.0", port=10000)
+    app.run(host="0.0.0.0", port=10000)

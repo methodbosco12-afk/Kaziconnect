@@ -1,13 +1,12 @@
 from database import db
 from datetime import datetime, timezone
 
-
 # 🕒 UTC helper (best practice)
 def utc_now():
     return datetime.now(timezone.utc)
 
 
-# 👤 USERS
+# 👤 USER
 class User(db.Model):
     __tablename__ = "user"
 
@@ -30,7 +29,7 @@ class FundiProfile(db.Model):
 
     user_id = db.Column(
         db.Integer,
-        db.ForeignKey('users.id'),
+        db.ForeignKey('user.id'),
         nullable=False,
         unique=True
     )
