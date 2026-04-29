@@ -59,7 +59,7 @@ def contractor_required(f):
 requests_per_ip = {}
 blocked_ips = {}
 
-username = "sandbox"
+username = os.getenv("AFRICASTALKING_USERNAME", "sandbox")
 api_key = os.getenv("AFRICASTALKING_API_KEY")
 
 if not api_key:
@@ -101,7 +101,7 @@ def send_otp_sms(phone, otp):
     message = f"Your OTP code is {otp}. It expires in 2 minutes."
 
     try:
-        response = sms.send(message, [phone])
+        response = sms.send(message, [phone], "Kaziconnect")
         print("OTP sent successfully:", response)
     except Exception as e:
         print("SMS failed:", e)
@@ -659,11 +659,8 @@ def register_fundi():
             return render_template("register_fundi.html", error="Please upload image")
 
         filename = secure_filename(file.filename)
-
-        # 🔥 avoid overwrite (important)
         unique_name = str(int(time.time())) + "_" + filename
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_name)
-
         file.save(filepath)
 
         # 🔐 CREATE USER
@@ -677,19 +674,35 @@ def register_fundi():
         db.session.add(user)
         db.session.commit()
 
-        # 👷 CREATE FUNDI PROFILE
-        fundi = FundiProfile(
-            user_id=user.id,
-            name=name,
-            ujuzi=ujuzi,
-            uzoefu=uzoefu,
-            phone=phone,
-            email=email,
-            image=unique_name,
-            location=location
-        )
+        # 👷 CHECK IF PROFILE EXISTS (UPSERT LOGIC)
+        existing_fundi = FundiProfile.query.filter_by(user_id=user.id).first()
 
-        db.session.add(fundi)
+        if existing_fundi:
+
+            # 🔄 UPDATE EXISTING PROFILE
+            existing_fundi.name = name
+            existing_fundi.ujuzi = ujuzi
+            existing_fundi.uzoefu = uzoefu
+            existing_fundi.phone = phone
+            existing_fundi.email = email
+            existing_fundi.location = location
+            existing_fundi.image = unique_name
+
+        else:
+
+            # ➕ CREATE NEW PROFILE
+            fundi = FundiProfile(
+                user_id=user.id,
+                name=name,
+                ujuzi=ujuzi,
+                uzoefu=uzoefu,
+                phone=phone,
+                email=email,
+                image=unique_name,
+                location=location
+            )
+            db.session.add(fundi)
+
         db.session.commit()
 
         return redirect(url_for('fundi_login'))
