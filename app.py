@@ -251,14 +251,14 @@ def search():
         ))
 
     query = FundiProfile.query
-    if ujuzi:
-        query = query.filter(FundiProfile.ujuzi.contains(ujuzi))
+    if ujuzi and ujuzi.strip():
+       query = query.filter(FundiProfile.ujuzi.ilike(f"%{ujuzi.strip()}%"))
 
-    if uzoefu:
-        query = query.filter(FundiProfile.uzoefu.contains(uzoefu))
-
-    if location:
-        query = query.filter(FundiProfile.location.contains(location))
+    if uzoefu and uzoefu.strip():
+       query = query.filter(FundiProfile.uzoefu.ilike(f"%{uzoefu.strip()}%"))
+    
+    if location and location.strip():
+        query = query.filter(FundiProfile.location.ilike(f"%{location.strip()}%"))
 
     results = query.all()
 
@@ -635,6 +635,12 @@ def register_fundi():
 
         password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
+
+        if not ujuzi:
+          ujuzi = "Haijatajwa"
+
+        if not uzoefu:
+           uzoefu = "Haijatajwa"
 
         # 🔒 PASSWORD MATCH
         if password != confirm_password:
@@ -1181,6 +1187,19 @@ def reject_request(id):
     db.session.commit()
 
     return redirect(url_for('featured_requests'))
+
+@app.route('/fix_db')
+def fix_db():
+    FundiProfile.query.filter(
+        (FundiProfile.ujuzi == None) | (FundiProfile.ujuzi == "")
+    ).update({FundiProfile.ujuzi: "Haijatajwa"}, synchronize_session=False)
+
+    FundiProfile.query.filter(
+        (FundiProfile.uzoefu == None) | (FundiProfile.uzoefu == "")
+    ).update({FundiProfile.uzoefu: "Haijatajwa"}, synchronize_session=False)
+
+    db.session.commit()
+    return "Fixed"
 
 @app.route('/admin/fundi_updates')
 @admin_required
