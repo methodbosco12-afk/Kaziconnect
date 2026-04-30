@@ -1,8 +1,8 @@
-"""fix users foreign key
+"""safe fixes
 
-Revision ID: 81101ed45e2c
+Revision ID: bf099159eb33
 Revises: 
-Create Date: 2026-04-30 20:50:52.441318
+Create Date: 2026-04-30 21:13:07.725105
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '81101ed45e2c'
+revision = 'bf099159eb33'
 down_revision = None
 branch_labels = None
 depends_on = None
