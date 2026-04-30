@@ -8,7 +8,7 @@ def utc_now():
 
 # 👤 USER
 class User(db.Model):
-    __tablename__ = "user"
+    __tablename__ = "users"
 
     id = db.Column(db.Integer, primary_key=True)
 
@@ -29,14 +29,14 @@ class FundiProfile(db.Model):
 
     user_id = db.Column(
         db.Integer,
-        db.ForeignKey('user.id'),
+        db.ForeignKey('users.id'),
         nullable=False,
         unique=True
     )
 
     name = db.Column(db.String(100))
-    ujuzi = db.Column(db.String(200))
-    uzoefu = db.Column(db.String(200))
+    skills = db.Column(db.String(200))
+    experience = db.Column(db.String(200))
     phone = db.Column(db.String(20))
     email = db.Column(db.String(100))
     image = db.Column(db.String(200))
