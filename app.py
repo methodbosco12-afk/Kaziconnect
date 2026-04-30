@@ -8,9 +8,9 @@ import time
 from dotenv import load_dotenv
 load_dotenv()
 import random
-import models
 
 import africastalking
+from flask_migrate import Migrate
 from functools import wraps
 from auth.admin_seed import create_admin
 
@@ -56,9 +56,6 @@ def contractor_required(f):
         return f(*args, **kwargs)
     return wrapper
 
-requests_per_ip = {}
-blocked_ips = {}
-
 username = os.getenv("AFRICASTALKING_USERNAME", "sandbox")
 api_key = os.getenv("AFRICASTALKING_API_KEY")
 
@@ -69,7 +66,6 @@ africastalking.initialize(username, api_key)
 sms = africastalking.SMS
 
 from werkzeug.utils import secure_filename
-from datetime import datetime, timedelta
 from apscheduler.schedulers.background import BackgroundScheduler
 from werkzeug.security import generate_password_hash, check_password_hash
 def is_featured_active(fundi):
@@ -108,8 +104,7 @@ def send_otp_sms(phone, otp):
 
 app = Flask(__name__, instance_relative_config=True)
 basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY") or "supersecretkey123"
-
+app.config['SECRET_KEY'] = os.getenv("SECRET_KEY", "dev-secret-key")
 uri = os.environ.get("DATABASE_URL")
 
 if not uri:
@@ -126,10 +121,7 @@ UPLOAD_FOLDER = 'static/images'
 app.config[ 'UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 db.init_app(app)
-
-with app.app_context():
-    print("🔥 DATABASE:", db.engine.url)
-    db.create_all()
+migrate = Migrate(app, db)
 
 @app.context_processor
 def inject_now():
@@ -175,6 +167,37 @@ def expire_jobs():
 
         print("✅ All expiry jobs ran:", now)
 
+        @app.route('/fix_db')
+        def fix_db():
+
+    # skills
+         FundiProfile.query.filter(
+        (FundiProfile.skills == None) |
+        (FundiProfile.skills == "") |
+        (FundiProfile.skills == "Ujuzi") |
+        (FundiProfile.skills == "ujuzi") |
+        (FundiProfile.skills == "Haijatajwa")
+    ).update(
+        {FundiProfile.skills: "Not specified"},
+        synchronize_session=False
+    )
+
+    # experience
+    FundiProfile.query.filter(
+        (FundiProfile.experience == None) |
+        (FundiProfile.experience == "") |
+        (FundiProfile.experience == "Uzoefu") |
+        (FundiProfile.experience == "uzoefu") |
+        (FundiProfile.experience == "Haijatajwa")
+    ).update(
+        {FundiProfile.experience: "Not specified"},
+        synchronize_session=False
+    )
+
+    db.session.commit()
+
+    return "✅ Database updated successfully"
+
 
 # 🔥 HOME
 @app.route('/')
@@ -209,53 +232,30 @@ def admin_login():
 
     return render_template("admin_login.html")
 
-@app.route('/reset_admin')
-def reset_admin():
-
-    from werkzeug.security import generate_password_hash
-
-    # 🔍 ensure DB is correct
-    print("RESET DB:", db.engine.url)
-
-    User.query.filter_by(role='admin').delete()
-    db.session.commit()
-
-    admin = User(
-        email="methodbosco12@gmail.com",
-        phone="0799978711",
-        password=generate_password_hash("Method@123"),
-        role="admin"
-    )
-
-    db.session.add(admin)
-    db.session.commit()
-
-    return "Admin reset successful"
-
 
 @app.route('/search', methods=['GET'])
 def search():
 
-    ujuzi = (request.args.get('ujuzi') or '').strip()
-    uzoefu = (request.args.get('uzoefu') or '').strip()
+    skills = (request.args.get('skills') or '').strip()
+    experience = (request.args.get('experience') or '').strip()
     location = (request.args.get('location') or '').strip()
 
     # 🔁 clean redirect (important fix)
     if request.args and not request.args.get('submitted'):
         return redirect(url_for(
             'search',
-            ujuzi=ujuzi,
-            uzoefu=uzoefu,
+            skills=skills,
+            experience=experience,
             location=location,
             submitted=1
         ))
 
     query = FundiProfile.query
-    if ujuzi and ujuzi.strip():
-       query = query.filter(FundiProfile.ujuzi.ilike(f"%{ujuzi.strip()}%"))
+    if skills and skills.strip():
+       query = query.filter(FundiProfile.skills.ilike(f"%{skills.strip()}%"))
 
-    if uzoefu and uzoefu.strip():
-       query = query.filter(FundiProfile.uzoefu.ilike(f"%{uzoefu.strip()}%"))
+    if experience and experience.strip():
+       query = query.filter(FundiProfile.experience.ilike(f"%{experience.strip()}%"))
     
     if location and location.strip():
         query = query.filter(FundiProfile.location.ilike(f"%{location.strip()}%"))
@@ -270,27 +270,22 @@ def search():
 
     return render_template("search.html", results=results)
 
-@app.route('/init_db')
-def init_db():
-    with app.app_context():
-        db.create_all()
-    return "DB tables created"
 
 @app.route('/results', methods=['GET'])
 def results():
 
-    ujuzi = request.args.get('ujuzi')
-    uzoefu = request.args.get('uzoefu')
+    skills = request.args.get('skills')
+    experience = request.args.get('experience')
     location = request.args.get('location')
 
     query = FundiProfile.query
 
     # 🔥 filters
-    if ujuzi:
-        query = query.filter(FundiProfile.ujuzi.contains(ujuzi))
+    if skills:
+        query = query.filter(FundiProfile.skills.contains(skills))
 
-    if uzoefu:
-        query = query.filter(FundiProfile.uzoefu.contains(uzoefu))
+    if experience:
+        query = query.filter(FundiProfile.experience.contains(experience))
 
     if location:
         query = query.filter(FundiProfile.location.contains(location))
@@ -499,7 +494,7 @@ def forgot_password():
         new_otp = OTP(
             identifier=identifier,
             otp=hashed_otp,
-            expiry=time.time() + 120,
+            expiry=datetime.now(timezone.utc) + timedelta(seconds=120),
             resends=0
         )
 
@@ -627,8 +622,8 @@ def register_fundi():
 
         # 🔹 GET FORM DATA
         name = request.form.get('name')
-        ujuzi = request.form.get('ujuzi')
-        uzoefu = request.form.get('uzoefu')
+        skills = request.form.get('skills')
+        experience = request.form.get('experience')
         phone = request.form.get('phone').strip().replace(" ", "")
         email = request.form.get('email').lower().strip()
         location = request.form.get('location')
@@ -636,11 +631,11 @@ def register_fundi():
         password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
 
-        if not ujuzi:
-          ujuzi = "Haijatajwa"
+        if not skills:
+          skills = "Not specified"
 
-        if not uzoefu:
-           uzoefu = "Haijatajwa"
+        if not experience:
+           experience = "Not specified"
 
         # 🔒 PASSWORD MATCH
         if password != confirm_password:
@@ -687,8 +682,8 @@ def register_fundi():
 
             # 🔄 UPDATE EXISTING PROFILE
             existing_fundi.name = name
-            existing_fundi.ujuzi = ujuzi
-            existing_fundi.uzoefu = uzoefu
+            existing_fundi.skills = skills
+            existing_fundi.experience = experience
             existing_fundi.phone = phone
             existing_fundi.email = email
             existing_fundi.location = location
@@ -700,8 +695,8 @@ def register_fundi():
             fundi = FundiProfile(
                 user_id=user.id,
                 name=name,
-                ujuzi=ujuzi,
-                uzoefu=uzoefu,
+                skills=skills,
+                experience=experience,
                 phone=phone,
                 email=email,
                 image=unique_name,
@@ -747,8 +742,8 @@ def update_profile():
 
         # 🔹 BASIC INFO
         fundi.name = request.form.get('name')
-        fundi.ujuzi = request.form.get('ujuzi')
-        fundi.uzoefu = request.form.get('uzoefu')
+        fundi.skills = request.form.get('skills')
+        fundi.experience = request.form.get('experience')
         fundi.location = request.form.get('location')
         fundi.phone = request.form.get('phone')
         fundi.email = request.form.get('email')
@@ -815,6 +810,7 @@ def my_requests():
     return render_template("my_requests.html", requests=requests)
 
 @app.route('/delete_fundi/<int:id>')
+@admin_required
 def delete_fundi(id):
     user = User.query.get_or_404(id)
     fundi = FundiProfile.query.filter_by(user_id=user.id).first()
@@ -952,6 +948,7 @@ def hire_fundi(fundi_id):
 
 
 @app.route('/boost_profile/<int:id>')
+@admin_required
 def boost_profile(id):
     fundi = FundiProfile.query.get_or_404(id)
 
@@ -966,6 +963,7 @@ def boost_profile(id):
     return "🚀 Profile boosted successfully!"
 
 @app.route('/feature/<int:id>')
+@admin_required
 def feature_fundi(id):
     fundi = FundiProfile.query.get_or_404(id)
     
@@ -1188,18 +1186,6 @@ def reject_request(id):
 
     return redirect(url_for('featured_requests'))
 
-@app.route('/fix_db')
-def fix_db():
-    FundiProfile.query.filter(
-        (FundiProfile.ujuzi == None) | (FundiProfile.ujuzi == "")
-    ).update({FundiProfile.ujuzi: "Haijatajwa"}, synchronize_session=False)
-
-    FundiProfile.query.filter(
-        (FundiProfile.uzoefu == None) | (FundiProfile.uzoefu == "")
-    ).update({FundiProfile.uzoefu: "Haijatajwa"}, synchronize_session=False)
-
-    db.session.commit()
-    return "Fixed"
 
 @app.route('/admin/fundi_updates')
 @admin_required
@@ -1218,7 +1204,7 @@ def hire_requests():
 
     return render_template("admin_hire_requests.html", requests=requests)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     with app.app_context():
 
@@ -1230,7 +1216,7 @@ if __name__ == '__main__':
             admin = User(
                 email="methodbosco12@gmail.com",
                 phone="0700000000",
-                password=generate_password_hash("Method@123"),
+                password=generate_password_hash(os.getenv("ADMIN_PASSWORD", "admin123")),
                 role="admin"
             )
 
@@ -1244,10 +1230,12 @@ if __name__ == '__main__':
     scheduler = BackgroundScheduler()
     scheduler.add_job(expire_jobs, 'interval', minutes=3)
 
-    if not os.environ.get("RENDER"):
-        scheduler.start()
+    if os.environ.get("RUN_SCHEDULER") == "true":
+      scheduler.start()
 
     import atexit
     atexit.register(lambda: scheduler.shutdown())
 
-    app.run(host="0.0.0.0", port=10000)
+    port = int(os.environ.get("PORT", 5000))
+
+    app.run(host="0.0.0.0", port=port)
