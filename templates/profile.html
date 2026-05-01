@@ -140,8 +140,8 @@
 
         <!-- INFO -->
         <div class="info">
-            <p><strong>Ujuzi:</strong> {{ fundi.ujuzi or 'Haijatajwa' }}</p>
-            <p><strong>Uzoefu:</strong> {{ fundi.uzoefu or 'Haijatajwa' }}</p>
+            <p><strong>Skills:</strong>  {{ fundi.skills if fundi.skills and fundi.skills not in ["", "Haijatajwa", "Not specified"] else "Not specified" }}</p>
+            <p><strong>Experience:</strong> {{ fundi.experience if fundi.experience and fundi.experience not in ["", "Haijatajwa", "Not specified"] else "Not specified" }}</p>
             <p><strong>Location:</strong> {{ fundi.location }}</p>
 
             <!-- CONTACT LOGIC -->

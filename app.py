@@ -170,35 +170,26 @@ def expire_jobs():
         print("✅ All expiry jobs ran:", now)
 
 @app.route('/fix_db')
+@admin_required
 def fix_db():
 
-    # skills
-         FundiProfile.query.filter(
+    FundiProfile.query.filter(
         (FundiProfile.skills == None) |
         (FundiProfile.skills == "") |
-        (FundiProfile.skills == "Ujuzi") |
-        (FundiProfile.skills == "ujuzi") |
-        (FundiProfile.skills == "Haijatajwa")
-    ).update(
-        {FundiProfile.skills: "Not specified"},
-        synchronize_session=False
-    )
+        (FundiProfile.skills.ilike("%haijatajwa%")) |
+        (FundiProfile.skills.ilike("%not specified%"))
+    ).update({FundiProfile.skills: None}, synchronize_session=False)
 
-    # experience
-         FundiProfile.query.filter(
+    FundiProfile.query.filter(
         (FundiProfile.experience == None) |
         (FundiProfile.experience == "") |
-        (FundiProfile.experience == "Uzoefu") |
-        (FundiProfile.experience == "uzoefu") |
-        (FundiProfile.experience == "Haijatajwa")
-    ).update(
-        {FundiProfile.experience: "Not specified"},
-        synchronize_session=False
-    )
+        (FundiProfile.experience.ilike("%haijatajwa%")) |
+        (FundiProfile.experience.ilike("%not specified%"))
+    ).update({FundiProfile.experience: None}, synchronize_session=False)
 
-         db.session.commit()
+    db.session.commit()
 
-         return "✅ Database updated successfully"
+    return "Cleaned successfully"
 
 
 # 🔥 HOME
@@ -633,11 +624,10 @@ def register_fundi():
         password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
 
-        if not skills:
-          skills = "Not specified"
+        skills = request.form.get('skills', '').strip().title()
+        experience = request.form.get('experience', '').strip()
 
-        if not experience:
-           experience = "Not specified"
+        
 
         # 🔒 PASSWORD MATCH
         if password != confirm_password:
