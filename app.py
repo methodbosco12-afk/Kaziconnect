@@ -10,7 +10,6 @@ load_dotenv()
 import random
 
 import africastalking
-from flask_migrate import Migrate
 from functools import wraps
 from auth.admin_seed import create_admin
 
@@ -121,7 +120,9 @@ UPLOAD_FOLDER = 'static/images'
 app.config[ 'UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 db.init_app(app)
-migrate = Migrate(app, db)
+
+with app.app_context():
+    db.create_all()
 
 @app.context_processor
 def inject_now():
@@ -167,8 +168,8 @@ def expire_jobs():
 
         print("✅ All expiry jobs ran:", now)
 
-        @app.route('/fix_db')
-        def fix_db():
+@app.route('/fix_db')
+def fix_db():
 
     # skills
          FundiProfile.query.filter(
@@ -183,7 +184,7 @@ def expire_jobs():
     )
 
     # experience
-    FundiProfile.query.filter(
+         FundiProfile.query.filter(
         (FundiProfile.experience == None) |
         (FundiProfile.experience == "") |
         (FundiProfile.experience == "Uzoefu") |
@@ -194,9 +195,9 @@ def expire_jobs():
         synchronize_session=False
     )
 
-    db.session.commit()
+         db.session.commit()
 
-    return "✅ Database updated successfully"
+         return "✅ Database updated successfully"
 
 
 # 🔥 HOME
@@ -1207,6 +1208,7 @@ def hire_requests():
 if __name__ == "__main__":
 
     with app.app_context():
+        db.create_all()
 
         admin = User.query.filter_by(role='admin').first()
 
