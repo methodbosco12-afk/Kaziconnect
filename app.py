@@ -118,6 +118,7 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 
 UPLOAD_FOLDER = 'static/images'
 app.config[ 'UPLOAD_FOLDER'] = UPLOAD_FOLDER
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 db.init_app(app)
 
