@@ -1,5 +1,6 @@
-from database import db
+from extensions import db
 from datetime import datetime, timezone
+from sqlalchemy.dialects.postgresql import ARRAY
 
 # 🕒 UTC helper (best practice)
 def utc_now():
@@ -20,6 +21,9 @@ class User(db.Model):
 
     is_blocked = db.Column(db.Boolean, default=False)
 
+    sms_notifications = db.Column(db.Boolean, default=True)
+    email_notifications = db.Column(db.Boolean, default=True)
+
 
 # 👷 FUNDI PROFILE
 class FundiProfile(db.Model):
@@ -35,7 +39,7 @@ class FundiProfile(db.Model):
     )
 
     name = db.Column(db.String(100))
-    skills = db.Column(db.String(200))
+    skills = db.Column(ARRAY(db.String))
     experience = db.Column(db.String(200))
     phone = db.Column(db.String(20))
     email = db.Column(db.String(100))
@@ -140,3 +144,48 @@ class ProfileUpdate(db.Model):
     new_value = db.Column(db.String(255))
 
     created_at = db.Column(db.DateTime, default=utc_now)
+
+
+class SupportMessage(db.Model):
+    __tablename__ = "support_message"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    name = db.Column(db.String(100))
+    phone = db.Column(db.String(20))
+    subject = db.Column(db.String(150))
+    message = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Notification(db.Model):
+    __tablename__ = "notifications"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    user_id = db.Column(db.Integer, nullable=False)
+    message = db.Column(db.Text, nullable=False)
+
+    type = db.Column(db.String(20))  # sms / email / system
+
+    is_sent = db.Column(db.Boolean, default=False)
+
+    is_read = db.Column(db.Boolean, default=False)
+
+    created_at = db.Column(db.DateTime, default=utc_now)
+
+class HireRequest(db.Model):
+    __tablename__ = "hire_request"
+    
+    id = db.Column(db.Integer, primary_key=True)
+
+    fundi_profile_id = db.Column(db.Integer, db.ForeignKey('fundi_profile.id'), nullable=False)
+
+    client_name = db.Column(db.String(100), nullable=False)
+    phone = db.Column(db.String(20), nullable=False)
+    location = db.Column(db.String(100), nullable=False)
+
+    message = db.Column(db.Text, nullable=False)
+
+    status = db.Column(db.String(20), default="pending")  # pending, accepted, rejected
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)

@@ -1,13 +1,20 @@
 
-from flask import Flask, render_template, request, redirect, url_for, session
+import atexit
+
+from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask_mail import Mail, Message
+from services.sms_service import send_sms
+from utils.notifications import notify_user
+from flask_migrate import Migrate
 from datetime import datetime, timedelta, timezone
-from database import db
-from models import User, FundiProfile, FeaturedRequest, OTP, ContactUnlock,IpBlock,ActivityLog,ProfileUpdate
+from extensions import db, mail
+from models import SupportMessage, User, FundiProfile, FeaturedRequest, OTP, ContactUnlock,IpBlock,ActivityLog,ProfileUpdate,Notification
 import os
 import time
 from dotenv import load_dotenv
 load_dotenv()
 import random
+import urllib.parse
 
 import africastalking
 from functools import wraps
@@ -73,6 +80,11 @@ def is_featured_active(fundi):
 def is_boost_active(fundi):
     return fundi.boost_until and fundi.boost_until > datetime.now(timezone.utc) and is_featured_active(fundi)
 
+def clean_skills(text):
+    if not text:
+        return None
+    return text.lower().strip()
+
 def format_phone(phone):
     phone = phone.strip().replace(" ", "")
 
@@ -101,6 +113,7 @@ def send_otp_sms(phone, otp):
     except Exception as e:
         print("SMS failed:", e)
 
+
 app = Flask(__name__, instance_relative_config=True)
 basedir = os.path.abspath(os.path.dirname(__file__))
 app.config['SECRET_KEY'] = os.getenv("SECRET_KEY", "dev-secret-key")
@@ -121,13 +134,26 @@ app.config[ 'UPLOAD_FOLDER'] = UPLOAD_FOLDER
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 db.init_app(app)
-
-with app.app_context():
-    db.create_all()
+migrate = Migrate()
+migrate.init_app(app, db)
 
 @app.context_processor
 def inject_now():
     return {'now': datetime.now(timezone.utc)}
+
+
+# =========================
+# MAIL CONFIG (WEKA KWANZA)
+# =========================
+app.config["MAIL_SERVER"] = "smtp.gmail.com"
+app.config["MAIL_PORT"] = 587
+app.config["MAIL_USE_TLS"] = True
+app.config["MAIL_USERNAME"] = os.getenv("MAIL_USERNAME")
+app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD")
+
+# 🔥 HII IJE BAADA YA CONFIG
+mail = Mail()
+mail.init_app(app)
 
 @app.route('/check_admin')
 def check_admin():
@@ -139,35 +165,25 @@ def check_admin():
     return f"Admin exists: {admin.email}"
 
 def expire_jobs():
-    with app.app_context():
+    try:
+        with app.app_context():
+            now = datetime.now(timezone.utc)
 
-        now = datetime.now(timezone.utc)
+            FundiProfile.query.filter(
+                FundiProfile.featured_until.isnot(None),
+                FundiProfile.featured_until < now
+            ).update({FundiProfile.featured_until: None})
 
-        # 🔥 EXPIRE FEATURED
-        FundiProfile.query.filter(
-            FundiProfile.featured_until != None,
-            FundiProfile.featured_until < now
-        ).update({FundiProfile.featured_until: None})
+            FundiProfile.query.filter(
+                FundiProfile.boost_until.isnot(None),
+                FundiProfile.boost_until < now
+            ).update({FundiProfile.boost_until: None})
 
-        # 🚀 EXPIRE BOOST
-        FundiProfile.query.filter(
-            FundiProfile.boost_until != None,
-            FundiProfile.boost_until < now
-        ).update({FundiProfile.boost_until: None})
+            db.session.commit()
+            print("✅ expiry ran")
 
-        # 🔐 EXPIRE CONTACT UNLOCKS (7 days)
-        expired = ContactUnlock.query.filter(
-            ContactUnlock.expires_at < now,
-            ContactUnlock.status == "approved"
-        ).all()
-
-        for e in expired:
-            e.status = "expired"
-            e.is_paid = False
-
-        db.session.commit()
-
-        print("✅ All expiry jobs ran:", now)
+    except Exception as e:
+        print("EXPIRY ERROR:", e)
 
 @app.route('/fix_db')
 @admin_required
@@ -233,66 +249,94 @@ def search():
     experience = (request.args.get('experience') or '').strip()
     location = (request.args.get('location') or '').strip()
 
-    # 🔁 clean redirect (important fix)
-    if request.args and not request.args.get('submitted'):
-        return redirect(url_for(
-            'search',
-            skills=skills,
-            experience=experience,
-            location=location,
-            submitted=1
-        ))
+    now = datetime.now(timezone.utc)
 
-    query = FundiProfile.query
-    if skills and skills.strip():
-       query = query.filter(FundiProfile.skills.ilike(f"%{skills.strip()}%"))
+    # 🚫 kama hakuna search yoyote, usirudishe watu
+    if not skills and not experience and not location:
+        return render_template("search.html", results=[], now=now)
 
-    if experience and experience.strip():
-       query = query.filter(FundiProfile.experience.ilike(f"%{experience.strip()}%"))
-    
-    if location and location.strip():
-        query = query.filter(FundiProfile.location.ilike(f"%{location.strip()}%"))
+    # 🔥 CHUJA DATABASE KABLA YA KURUDISHA
+    query = FundiProfile.query.filter(
+        FundiProfile.skills.isnot(None),
+        FundiProfile.skills != ""
+    )
 
-    results = query.all()
+    # 🔍 STRICT FILTERS (HII NDIO MSAADA WA KWELI)
+    if skills:
+        query = query.filter(
+        FundiProfile.skills.ilike(f"%{skills},%") |
+        FundiProfile.skills.ilike(f"%,{skills}%") |
+        FundiProfile.skills.ilike(f"% {skills} %") |
+        FundiProfile.skills.ilike(f"{skills}")
+    )
 
-    results = sorted(
-        results,
-        key=lambda f: f.featured_until is not None and f.featured_until > datetime.now(timezone.utc),
+    if experience:
+        query = query.filter(FundiProfile.experience.ilike(f"%{experience}%"))
+
+    if location:
+        query = query.filter(FundiProfile.location.ilike(f"%{location}%"))
+
+    # 🚀 PATA RESULTS MOJA KWA MOJA
+    results = query.limit(50).all()
+
+    # ⭐ SORT (featured & boost juu)
+    results.sort(
+        key=lambda f: (
+            1 if f.boost_until and f.boost_until > now else 0,
+            1 if f.featured_until and f.featured_until > now else 0
+        ),
         reverse=True
     )
 
-    return render_template("search.html", results=results)
-
+    return render_template(
+        "search.html",
+        results=results,
+        skills=skills,
+        experience=experience,
+        location=location,
+        now=now
+    )
 
 @app.route('/results', methods=['GET'])
 def results():
 
-    skills = request.args.get('skills')
-    experience = request.args.get('experience')
+    skills = (request.args.get('skills') or '').strip().lower()
+    experience = (request.args.get('experience') or '').strip().lower()
     location = request.args.get('location')
 
     query = FundiProfile.query
 
-    # 🔥 filters
+    # 🔥 skills (strict improved)
     if skills:
-        query = query.filter(FundiProfile.skills.contains(skills))
+        query = query.filter(
+            FundiProfile.skills.ilike(f"%{skills},%") |
+            FundiProfile.skills.ilike(f"%,{skills}%") |
+            FundiProfile.skills.ilike(f"% {skills} %") |
+            FundiProfile.skills.ilike(f"{skills}")
+        )
 
+    # 🔥 experience (improved)
     if experience:
-        query = query.filter(FundiProfile.experience.contains(experience))
+        query = query.filter(
+            FundiProfile.experience.ilike(f"%{experience}%")
+        )
 
+    # 🔥 location (unchanged)
     if location:
-        query = query.filter(FundiProfile.location.contains(location))
+        query = query.filter(
+            FundiProfile.location.contains(location)
+        )
 
     fundis = query.all()
 
-    # 🚀 SORTING LOGIC
+    # 🚀 SORTING LOGIC (UNCHANGED)
     def sort_key(f):
         if f.boost_until and f.boost_until > datetime.now(timezone.utc):
-            return 3   # 🚀 boost (juu kabisa)
+            return 3
         elif f.featured_until and f.featured_until > datetime.now(timezone.utc):
-            return 2   # ⭐ featured
+            return 2
         else:
-            return 1   # normal
+            return 1
 
     fundis = sorted(fundis, key=sort_key, reverse=True)
 
@@ -301,6 +345,7 @@ def results():
         results=fundis,
         now=datetime.now(timezone.utc)
     )
+
 
     # =========================
 # CONTACT UNLOCK ROUTES 💰
@@ -615,19 +660,15 @@ def register_fundi():
 
         # 🔹 GET FORM DATA
         name = request.form.get('name')
-        skills = request.form.get('skills')
-        experience = request.form.get('experience')
+        skills = clean_skills(request.form.get('skills'))
+        experience = clean_skills(request.form.get('experience'))
+
         phone = request.form.get('phone').strip().replace(" ", "")
         email = request.form.get('email').lower().strip()
         location = request.form.get('location')
 
         password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
-
-        skills = request.form.get('skills', '').strip().title()
-        experience = request.form.get('experience', '').strip()
-
-        
 
         # 🔒 PASSWORD MATCH
         if password != confirm_password:
@@ -653,7 +694,8 @@ def register_fundi():
 
         filename = secure_filename(file.filename)
         unique_name = str(int(time.time())) + "_" + filename
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_name)
+
+        filepath = os.path.join(app.root_path, 'static', 'images', unique_name)
         file.save(filepath)
 
         # 🔐 CREATE USER
@@ -667,27 +709,22 @@ def register_fundi():
         db.session.add(user)
         db.session.commit()
 
-        # 👷 CHECK IF PROFILE EXISTS (UPSERT LOGIC)
-        existing_fundi = FundiProfile.query.filter_by(user_id=user.id).first()
+        # 👷 CREATE OR UPDATE PROFILE
+        fundi = FundiProfile.query.filter_by(user_id=user.id).first()
 
-        if existing_fundi:
-
-            # 🔄 UPDATE EXISTING PROFILE
-            existing_fundi.name = name
-            existing_fundi.skills = skills
-            existing_fundi.experience = experience
-            existing_fundi.phone = phone
-            existing_fundi.email = email
-            existing_fundi.location = location
-            existing_fundi.image = unique_name
-
+        if fundi:
+            fundi.name = name
+            fundi.skills = skills.lower().strip()
+            fundi.experience = experience
+            fundi.phone = phone
+            fundi.email = email
+            fundi.location = location
+            fundi.image = unique_name
         else:
-
-            # ➕ CREATE NEW PROFILE
             fundi = FundiProfile(
                 user_id=user.id,
                 name=name,
-                skills=skills,
+                skills=skills.lower().strip(),
                 experience=experience,
                 phone=phone,
                 email=email,
@@ -698,27 +735,60 @@ def register_fundi():
 
         db.session.commit()
 
+        # 📩 SMS NOTIFICATION (PRODUCTION SAFE)
+        try:
+            send_sms(
+                phone,
+                "🎉 Karibu KaziConnect! Umefanikiwa kujisajili kama Fundi."
+            )
+        except Exception as e:
+            print("SMS error:", e)
+
         return redirect(url_for('fundi_login'))
 
     return render_template("register_fundi.html")
 
 @app.route('/my_profile')
 def my_profile():
-    if 'user_id' not in session:
+
+    if session.get('role') != 'fundi':
         return redirect(url_for('fundi_login'))
 
-    fundi = FundiProfile.query.filter_by(user_id=session['user_id']).first()
+    user = User.query.get(session['user_id'])
+
+    if not user:
+        session.clear()
+        return redirect(url_for('fundi_login'))
+
+    fundi = FundiProfile.query.filter_by(user_id=user.id).first()
 
     if not fundi:
-        return "❌ Profile haijapatikana"
+        return redirect(url_for('register_fundi'))
 
-    return render_template(
-        "profile.html",
-        fundi=fundi,
-        is_owner=True,        # 🔥 muhimu sana
-        is_unlocked=True,     # 🔥 fundi ha-lockwi
-        role='fundi'
-    )
+    return render_template("profile.html", fundi=fundi)
+
+@app.route('/delete_fundi_account', methods=['POST'])
+def delete_fundi_account():
+    user_id = session.get('user_id')
+    password = request.form.get('password')
+
+    user = User.query.get(user_id)
+
+    # 🔐 verify password
+    if not user or not check_password_hash(user.password, password):
+        flash("❌ Password si sahihi. Account haijafutwa.")
+        return redirect(url_for('profile'))
+
+    # 🧹 delete related data first (important)
+    FundiProfile.query.filter_by(user_id=user_id).delete()
+    User.query.filter_by(id=user_id).delete()
+
+    db.session.commit()
+
+    session.clear()
+
+    flash("✅ Account imefutwa kikamilifu.")
+    return redirect(url_for('home'))
 
 @app.route('/fundi/update_profile', methods=['GET', 'POST'])
 @fundi_required
@@ -734,8 +804,8 @@ def update_profile():
 
         # 🔹 BASIC INFO
         fundi.name = request.form.get('name')
-        fundi.skills = request.form.get('skills')
-        fundi.experience = request.form.get('experience')
+        fundi.skills = clean_skills(request.form.get('skills'))
+        fundi.experience = clean_skills(request.form.get('experience'))
         fundi.location = request.form.get('location')
         fundi.phone = request.form.get('phone')
         fundi.email = request.form.get('email')
@@ -747,8 +817,13 @@ def update_profile():
             import os
 
             filename = secure_filename(file.filename)
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            unique_name = str(int(time.time())) + "_" + filename
+
+            filepath = os.path.join(app.root_path, 'static', 'images', unique_name)
+
             file.save(filepath)
+
+            print("Saved to:", filepath)
 
             fundi.image = filename
 
@@ -801,20 +876,6 @@ def my_requests():
 
     return render_template("my_requests.html", requests=requests)
 
-@app.route('/delete_fundi/<int:id>')
-@admin_required
-def delete_fundi(id):
-    user = User.query.get_or_404(id)
-    fundi = FundiProfile.query.filter_by(user_id=user.id).first()
-
-    if fundi:
-        db.session.delete(fundi)
-
-    db.session.delete(user)
-    db.session.commit()
-
-    return "Fundi deleted successfully"
-
 
 # 🔥 DASHBOARD
 @app.route('/dashboard')
@@ -827,39 +888,85 @@ def admin_dashboard():
 
     from sqlalchemy import func
 
+    # =========================
+    # NEW ADDITIONS (HAZIHARIBU LOGIC YA ZAMANI)
+    # =========================
+    total_fundi = FundiProfile.query.count()
+    total_users = User.query.count()
+
+    now = datetime.now(timezone.utc)
+
+    active_featured = FundiProfile.query.filter(
+        FundiProfile.featured_until != None,
+        FundiProfile.featured_until > now
+    ).count()
+
+    active_boosted = FundiProfile.query.filter(
+        FundiProfile.boost_until != None,
+        FundiProfile.boost_until > now
+    ).count()
+
+    recent_fundis = FundiProfile.query.order_by(
+        FundiProfile.id.desc()
+    ).limit(10).all()
+
+    # =========================
+    # LOGIC YAKO YA ZAMANI (UNCHANGED)
+    # =========================
+
     # CONTACT PAYMENTS
     total_contacts = ContactUnlock.query.count()
-    paid_contacts = ContactUnlock.query.filter_by(is_paid=True).count()
-    pending_contacts = ContactUnlock.query.filter_by(is_paid=False).count()
 
-    contact_earnings = db.session.query(func.sum(ContactUnlock.amount))\
-        .filter_by(is_paid=True).scalar() or 0
+    paid_contacts = ContactUnlock.query.filter_by(
+        is_paid=True
+    ).count()
+
+    pending_contacts = ContactUnlock.query.filter_by(
+        is_paid=False
+    ).count()
+
+    contact_earnings = db.session.query(
+        func.sum(ContactUnlock.amount)
+    ).filter_by(is_paid=True).scalar() or 0
 
     # FEATURED REQUESTS
     featured_pending = FeaturedRequest.query.filter_by(
-        status="pending", type="featured"
+        status="pending",
+        type="featured"
     ).count()
 
     boost_pending = FeaturedRequest.query.filter_by(
-        status="pending", type="boost"
+        status="pending",
+        type="boost"
     ).count()
 
     approved_featured = FeaturedRequest.query.filter_by(
-        status="approved", type="featured"
+        status="approved",
+        type="featured"
     ).count()
 
     approved_boost = FeaturedRequest.query.filter_by(
-        status="approved", type="boost"
+        status="approved",
+        type="boost"
     ).count()
 
     # TOTAL EARNINGS
     featured_earnings = approved_featured * 3000
     boost_earnings = approved_boost * 2000
-    total_earnings = contact_earnings + featured_earnings + boost_earnings
 
+    total_earnings = (
+        contact_earnings +
+        featured_earnings +
+        boost_earnings
+    )
+
+    # =========================
+    # RETURN TEMPLATE
+    # =========================
     return render_template(
         "admin_dashboard.html",
 
+        # OLD VARIABLES
         total_contacts=total_contacts,
         paid_contacts=paid_contacts,
         pending_contacts=pending_contacts,
@@ -870,8 +977,22 @@ def admin_dashboard():
         contact_earnings=contact_earnings,
         featured_earnings=featured_earnings,
         boost_earnings=boost_earnings,
-        total_earnings=total_earnings
+        total_earnings=total_earnings,
+
+        # NEW ADDITIONS
+        total_fundi=total_fundi,
+        total_users=total_users,
+        active_featured=active_featured,
+        active_boosted=active_boosted,
+        recent_fundis=recent_fundis,
+        now=now
     )
+
+@app.route('/admin/fundis')
+@admin_required
+def admin_fundis():
+    fundis = FundiProfile.query.order_by(FundiProfile.id.desc()).all()
+    return render_template("admin_fundis.html", fundis=fundis)
 
 # 🔥 LOGOUT
 @app.route('/logout')
@@ -906,37 +1027,118 @@ def profile(id):
         now=datetime.now(timezone.utc)
     )
 
+@app.route('/profile')
+def profile_redirect():
+    if session.get('role') != 'fundi':
+        return redirect(url_for('fundi_login'))
+
+    user_id = session.get('user_id')
+
+    if not user_id:
+        return redirect(url_for('fundi_login'))
+
+    fundi = FundiProfile.query.filter_by(user_id=user_id).first()
+
+    if not fundi:
+        return redirect(url_for('register_fundi'))
+
+    return redirect(url_for('profile', id=fundi.id))
+
+@app.route('/notifications')
+def notifications_page():
+
+    if 'user_id' not in session:
+        return redirect(url_for('fundi_login'))
+
+    user_id = session['user_id']
+
+    notifications = Notification.query.filter_by(
+        user_id=user_id
+    ).order_by(Notification.id.desc()).all()
+
+    return render_template(
+        "notifications.html",
+        notifications=notifications
+    )
+
+@app.route('/notifications/read/<int:id>')
+def mark_as_read(id):
+
+    if 'user_id' not in session:
+        return redirect(url_for('fundi_login'))
+
+    notif = Notification.query.get_or_404(id)
+
+    if notif.user_id != session['user_id']:
+        return "Not allowed"
+
+    notif.is_read = True
+    db.session.commit()
+
+    return redirect(url_for('notifications_page'))
+
+@app.route('/notifications/read_all')
+def read_all():
+
+    if 'user_id' not in session:
+        return redirect(url_for('fundi_login'))
+
+    Notification.query.filter_by(
+        user_id=session['user_id'],
+        is_read=False
+    ).update({Notification.is_read: True})
+
+    db.session.commit()
+
+    return redirect(url_for('notifications_page'))
+
 # 💼 HIRE FUNDI ROUTE
 @app.route('/hire_fundi/<int:fundi_id>', methods=['POST'])
 @contractor_required
 def hire_fundi(fundi_id):
 
+    fundi = FundiProfile.query.get_or_404(fundi_id)
     contractor_id = session['user_id']
 
-    fundi = FundiProfile.query.get_or_404(fundi_id)
+    # 🔥 DATA TOKA FORM
+    client_name = request.form.get('name')
+    phone = request.form.get('phone')
+    location = request.form.get('location')
+    message = request.form.get('message')
 
-    # optional: avoid duplicate requests
-    existing = FeaturedRequest.query.filter_by(
+    # ❌ validation
+    if not client_name or not phone or not location:
+        return "Tafadhali jaza taarifa zote"
+
+    # ➕ SAVE REQUEST
+    hire = HireRequest(
         fundi_id=fundi_id,
-        type="hire",
-        status="pending"
-    ).first()
-
-    if existing:
-        return "Already requested"
-
-    hire_request = FeaturedRequest(
-        fundi_id=fundi_id,
-        phone=None,
-        transaction_id=None,
-        status="pending",
-        type="hire"
+        contractor_id=contractor_id,
+        client_name=client_name,
+        phone=phone,
+        location=location,
+        message=message
     )
 
-    db.session.add(hire_request)
+    db.session.add(hire)
     db.session.commit()
 
-    return "Hire request sent successfully"
+    # 🔔 NOTIFICATION KWA FUNDI
+    notify_user(
+        fundi.user_id,
+        f"🔔 Una hire request mpya kutoka {client_name} ({location})"
+    )
+
+    # 📩 SMS kwa fundi
+    try:
+        send_sms(
+            fundi.phone,
+            f"New job request from {client_name} - check KaziConnect"
+        )
+    except:
+        pass
+
+    return "✅ Hire request sent successfully"
 
 
 @app.route('/boost_profile/<int:id>')
@@ -964,8 +1166,10 @@ def feature_fundi(id):
     db.session.commit()
     return "Fundi amefanywa Featured ⭐ kwa siku 30"
 
+
 @app.route('/request_feature/<int:id>', methods=['POST'])
 def request_feature(id):
+
     phone = request.form['phone']
     transaction_id = request.form['transaction_id']
 
@@ -979,6 +1183,14 @@ def request_feature(id):
 
     db.session.add(request_entry)
     db.session.commit()
+
+    # 🔔 HAPA NDIPO NOTIFICATION INAWEKWA
+    fundi = FundiProfile.query.get(id)
+
+    notify_user(
+        fundi.user_id,
+        "📢 Ombi lako la Featured limepokelewa, linasubiri approval."
+    )
 
     return render_template("success.html", type="featured")
 
@@ -1090,45 +1302,22 @@ def admin_earnings():
         recent_features=recent_features
     )
 
-@app.route('/admin/delete_fundi/<int:id>')
+@app.route('/admin/delete_fundi/<int:id>', methods=['POST'])
 @admin_required
 def delete_fundi_admin(id):
 
     fundi = FundiProfile.query.get_or_404(id)
     user = User.query.get(fundi.user_id)
 
-    # delete fundi profile
     db.session.delete(fundi)
 
-    # delete user pia
     if user:
         db.session.delete(user)
 
     db.session.commit()
 
-    return "Fundi deleted successfully"
+    return redirect(url_for('admin_fundis'))
 
-@app.route('/admin/block_user/<int:id>')
-@admin_required
-def block_user(id):
-
-    user = User.query.get(id)
-
-    if not user:
-        return "User not found"
-
-    user.is_blocked = True
-    db.session.commit()
-
-    # 🔥 LOG HAPA
-    log = ActivityLog(
-        user_id=session.get('user_id'),
-        action=f"Blocked user {id}"
-    )
-    db.session.add(log)
-    db.session.commit()
-
-    return "User blocked"
 
 @app.route('/admin/approve_feature/<int:id>')
 @admin_required
@@ -1165,6 +1354,12 @@ def approve_contact(id):
 
     db.session.commit()
 
+    # 🔔 NOTIFICATION (HAPA NDIPO INAWEKWA)
+    notify_user(
+        payment.contractor_id,
+        "✅ Malipo yako yamekubaliwa. Sasa unaweza kuona contact ya fundi."
+    )
+
     return redirect(url_for('admin_dashboard'))
 
 @app.route('/admin/reject_request/<int:id>')
@@ -1196,6 +1391,140 @@ def hire_requests():
 
     return render_template("admin_hire_requests.html", requests=requests)
 
+@app.route("/send_support_message", methods=["POST"])
+def send_support_message():
+    try:
+        channel = request.form.get("channel")
+        name = request.form.get("name")
+        phone = request.form.get("phone")
+        subject = request.form.get("subject")
+        message = request.form.get("message")
+
+        full_msg = f"""
+Jina: {name}
+Simu: {phone}
+Kichwa: {subject}
+
+Ujumbe:
+{message}
+"""
+
+        # WHATSAPP
+        if channel == "whatsapp":
+            whatsapp_number = "255799978711"
+            encoded_msg = urllib.parse.quote(full_msg)
+            url = f"https://wa.me/{whatsapp_number}?text={encoded_msg}"
+            return redirect(url)
+
+        # EMAIL
+        elif channel == "email":
+            msg = Message(
+                subject=f"KaziConnect Support: {subject}",
+                sender=app.config["MAIL_USERNAME"],
+                recipients=[app.config["MAIL_USERNAME"]]  # 🔥 FIX
+            )
+            msg.body = full_msg
+
+            mail.send(msg)
+
+            return "✅ Email imetumwa successfully"
+
+        return "❌ Channel haijulikani"
+
+    except Exception as e:
+        print("EMAIL ERROR:", e)
+        return f"❌ Email failed: {str(e)}"
+
+@app.route('/about')
+def about():
+    return render_template('about.html')
+
+@app.route('/contact')
+def contact():
+    return render_template("contact.html")
+
+@app.route('/settings', methods=['GET', 'POST'])
+def settings():
+
+    if 'user_id' not in session:
+        return redirect(url_for('fundi_login'))
+
+    user = User.query.get(session['user_id'])
+
+    if request.method == 'POST':
+
+        action = request.form.get("action")
+
+        # =========================
+        # 🔐 CHANGE PASSWORD
+        # =========================
+        if action == "change_password":
+
+            current = request.form.get("current_password")
+            new = request.form.get("new_password")
+            confirm = request.form.get("confirm_password")
+
+            if not check_password_hash(user.password, current):
+                return "❌ Current password si sahihi"
+
+            if new != confirm:
+                return "❌ Password hazifanani"
+
+            if len(new) < 6:
+                return "❌ Password lazima iwe angalau 6"
+
+            user.password = generate_password_hash(new)
+            db.session.commit()
+
+            return "✅ Password imebadilishwa"
+
+        # =========================
+        # 📱 UPDATE CONTACT INFO
+        # =========================
+        elif action == "update_contact":
+
+            phone = request.form.get("phone")
+            email = request.form.get("email")
+
+            user.phone = phone
+            user.email = email
+
+            db.session.commit()
+
+            return "✅ Contact updated"
+
+        # =========================
+        # 🔔 NOTIFICATIONS
+        # =========================
+        elif action == "notifications":
+
+            user.sms_notifications = bool(request.form.get("sms_notifications"))
+            user.email_notifications = bool(request.form.get("email_notifications"))
+
+            db.session.commit()
+
+            return "✅ Notification settings saved"
+
+        # =========================
+        # 🗑️ DELETE ACCOUNT
+        # =========================
+        elif action == "delete_account":
+
+            password = request.form.get("password")
+
+            if not check_password_hash(user.password, password):
+                return "❌ Password si sahihi"
+
+            FundiProfile.query.filter_by(user_id=user.id).delete()
+            User.query.filter_by(id=user.id).delete()
+
+            db.session.commit()
+            session.clear()
+
+            return redirect(url_for('home'))
+
+    return render_template("settings.html", user=user)
+
 if __name__ == "__main__":
 
     with app.app_context():
@@ -1209,7 +1538,9 @@ if __name__ == "__main__":
             admin = User(
                 email="methodbosco12@gmail.com",
                 phone="0700000000",
-                password=generate_password_hash(os.getenv("ADMIN_PASSWORD", "admin123")),
+                password=generate_password_hash(
+                    os.getenv("ADMIN_PASSWORD", "admin123")
+                ),
                 role="admin"
             )
 
@@ -1217,18 +1548,18 @@ if __name__ == "__main__":
             db.session.commit()
 
             print("✅ Admin created")
+
         else:
             print("ℹ️ Admin already exists")
 
+    # 🔥 START SCHEDULER
     scheduler = BackgroundScheduler()
     scheduler.add_job(expire_jobs, 'interval', minutes=3)
+    scheduler.start()
 
-    if os.environ.get("RUN_SCHEDULER") == "true":
-      scheduler.start()
-
-    import atexit
+    # 🔥 SAFE SHUTDOWN
     atexit.register(lambda: scheduler.shutdown())
 
+    # 🔥 RUN FLASK
     port = int(os.environ.get("PORT", 5000))
-
-    app.run(host="0.0.0.0", port=port)
+    app.run(debug=True, port=port, use_reloader=False)

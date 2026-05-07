@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin - All Fundis</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial, sans-serif;
+    background:#f4f6fb;
+}
+
+.container{
+    max-width:1100px;
+    margin:30px auto;
+    padding:20px;
+}
+
+h2{
+    margin-bottom:20px;
+    color:#222;
+}
+
+.search-box{
+    margin-bottom:20px;
+}
+
+.search-box input{
+    width:100%;
+    padding:12px;
+    border-radius:8px;
+    border:1px solid #ddd;
+    font-size:15px;
+    box-sizing:border-box;
+}
+
+.table-wrap{
+    overflow-x:auto;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    background:#fff;
+    border-radius:10px;
+    overflow:hidden;
+    box-shadow:0 4px 15px rgba(0,0,0,0.05);
+}
+
+th, td{
+    padding:12px;
+    text-align:left;
+    border-bottom:1px solid #eee;
+    font-size:14px;
+}
+
+th{
+    background:#007bff;
+    color:white;
+}
+
+tr:hover{
+    background:#f9fbff;
+}
+
+.actions{
+    white-space:nowrap;
+}
+
+.btn{
+    padding:7px 12px;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+    font-size:13px;
+    text-decoration:none;
+    display:inline-block;
+    margin-right:5px;
+}
+
+.view{
+    background:#28a745;
+    color:white;
+}
+
+.delete{
+    background:#dc3545;
+    color:white;
+}
+
+.empty{
+    text-align:center;
+    padding:25px;
+    color:#777;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h2>👷 All Fundis</h2>
+
+    <!-- SEARCH -->
+    <div class="search-box">
+        <input type="text"
+               id="searchInput"
+               placeholder="Search by name, skill, phone or location...">
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrap">
+        <table id="fundiTable">
+
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Skills</th>
+                    <th>Phone</th>
+                    <th>Location</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+            {% if fundis %}
+                {% for fundi in fundis %}
+                <tr>
+                    <td>{{ fundi.name }}</td>
+                    <td>{{ fundi.skills }}</td>
+                    <td>{{ fundi.phone }}</td>
+                    <td>{{ fundi.location }}</td>
+
+                    <td class="actions">
+
+                        <!-- VIEW -->
+                        <a class="btn view"
+                           href="{{ url_for('profile', id=fundi.id) }}">
+                           View
+                        </a>
+
+                        <!-- DELETE -->
+                        <form method="POST"
+                              action="{{ url_for('delete_fundi_admin', id=fundi.id) }}"
+                              style="display:inline; margin:0;">
+
+                            <button type="submit"
+                                    class="btn delete"
+                                    onclick="return confirm('Una uhakika unataka kumfuta fundi huyu?')">
+                                Delete
+                            </button>
+
+                        </form>
+
+                    </td>
+                </tr>
+                {% endfor %}
+
+            {% else %}
+                <tr>
+                    <td colspan="5" class="empty">
+                        No fundis found
+                    </td>
+                </tr>
+            {% endif %}
+
+            </tbody>
+
+        </table>
+    </div>
+
+</div>
+
+<script>
+document.getElementById("searchInput").addEventListener("keyup", function () {
+
+    let filter = this.value.toLowerCase();
+    let rows = document.querySelectorAll("#fundiTable tbody tr");
+
+    rows.forEach(row => {
+        let text = row.innerText.toLowerCase();
+        row.style.display = text.includes(filter) ? "" : "none";
+    });
+
+});
+</script>
+
+</body>
+</html>

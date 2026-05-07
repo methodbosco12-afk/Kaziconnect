@@ -1,53 +1,151 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Update Profile</title>
+    <title>Update Profile - KaziConnect</title>
 
     <style>
+        /* 🌌 BACKGROUND */
         body {
-            font-family: Arial;
-            background: #f5f7fb;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+
+            background: linear-gradient(
+                135deg,
+                #0f172a 0%,
+                #1e3a8a 40%,
+                #0f766e 100%
+            );
+
+            overflow-x: hidden;
         }
 
+        /* ✨ GLOW EFFECT */
+        body::before {
+            content: "";
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            background: #38bdf8;
+            filter: blur(160px);
+            opacity: 0.15;
+            top: -120px;
+            left: -120px;
+            z-index: -1;
+        }
+
+        body::after {
+            content: "";
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            background: #22c55e;
+            filter: blur(160px);
+            opacity: 0.12;
+            bottom: -120px;
+            right: -120px;
+            z-index: -1;
+        }
+
+        /* 📦 CONTAINER */
         .container {
-            max-width: 500px;
-            margin: 40px auto;
-        }
-
-        .card {
-            background: white;
+            max-width: 550px;
+            margin: 50px auto;
             padding: 20px;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
         }
 
+        /* 🧊 GLASS CARD */
+        .card {
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(14px);
+
+            border-radius: 20px;
+            padding: 25px;
+
+            border: 1px solid rgba(255,255,255,0.12);
+
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+
+            color: #e2e8f0;
+        }
+
+        /* 🔥 TITLE (SAFE — NO ERROR) */
+        h2, h3 {
+            text-align: center;
+            margin-bottom: 15px;
+
+            background: linear-gradient(90deg, #ffffff, #38bdf8, #22c55e);
+
+            /* ✔ SAFE ORDER (NO LINTER ERROR) */
+            background-clip: text;
+            -webkit-background-clip: text;
+
+            color: transparent;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* 👤 IMAGE */
+        img {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            display: block;
+            margin: 0 auto 15px auto;
+            border: 3px solid rgba(255,255,255,0.3);
+        }
+
+        /* 📄 INPUTS */
         input, textarea {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             margin-bottom: 10px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
+
+            border-radius: 12px;
+            border: none;
+            outline: none;
+
+            font-size: 15px;
         }
 
+        textarea {
+            resize: none;
+        }
+
+        /* 🚀 BUTTON */
         button {
             width: 100%;
-            padding: 10px;
-            background: #007bff;
+            padding: 12px;
+
+            background: linear-gradient(90deg, #38bdf8, #22c55e);
             color: white;
+
             border: none;
-            border-radius: 8px;
+            border-radius: 14px;
+
+            font-weight: bold;
+            cursor: pointer;
+
+            transition: 0.3s;
         }
 
         button:hover {
-            background: #0056b3;
+            transform: scale(1.03);
         }
 
-        img {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            margin-bottom: 10px;
+        hr {
+            border: 0;
+            height: 1px;
+            background: rgba(255,255,255,0.2);
+            margin: 15px 0;
         }
+
+        /* 📱 MOBILE */
+        @media (max-width: 768px) {
+            .container {
+                margin: 20px;
+            }
+        }
+
     </style>
 </head>
 
@@ -56,9 +154,8 @@
 <div class="container">
     <div class="card">
 
-        <h2>Update Profile</h2>
+        <h2>👤 Update Profile</h2>
 
-        <!-- CURRENT IMAGE -->
         {% if fundi.image %}
             <img src="{{ url_for('static', filename='images/' + fundi.image) }}">
         {% endif %}
@@ -78,6 +175,7 @@
             <input type="email" name="email" value="{{ fundi.email }}" placeholder="Email">
 
             <input type="file" name="image">
+
             <hr>
 
             <h3>🔐 Badilisha Password</h3>
@@ -88,7 +186,7 @@
 
             <input type="password" name="confirm_password" placeholder="Confirm New Password">
 
-            <button type="submit">Update Profile</button>
+            <button type="submit">🚀 Update Profile</button>
 
         </form>
 

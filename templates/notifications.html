@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Notifications</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f6fb;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 40px auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .time {
+            font-size: 12px;
+            color: gray;
+            margin-top: 5px;
+        }
+
+        .unread-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: red;
+            color: white;
+            font-size: 10px;
+            padding: 3px 6px;
+            border-radius: 5px;
+        }
+
+        .actions {
+            margin-top: 10px;
+        }
+
+        .actions a {
+            font-size: 12px;
+            margin-right: 10px;
+            text-decoration: none;
+            color: #007bff;
+        }
+
+        .empty {
+            text-align: center;
+            color: gray;
+            margin-top: 50px;
+        }
+
+        .mark-all {
+            font-size: 13px;
+            text-decoration: none;
+            color: green;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h2>🔔 Notifications</h2>
+
+        <a class="mark-all" href="/notifications/read_all">
+            Mark all as read
+        </a>
+    </div>
+
+    {% if notifications %}
+
+        {% for n in notifications %}
+            <div class="card">
+
+                {% if not n.is_read %}
+                    <div class="unread-badge">NEW</div>
+                {% endif %}
+
+                <div class="title">📢 Notification</div>
+
+                <div>{{ n.message }}</div>
+
+                <div class="time">
+                    {{ n.created_at }}
+                </div>
+
+                <div class="actions">
+                    {% if not n.is_read %}
+                        <a href="/notifications/read/{{ n.id }}">Mark as read</a>
+                    {% endif %}
+                </div>
+
+            </div>
+        {% endfor %}
+
+    {% else %}
+
+        <div class="empty">
+            Hakuna notifications bado 😔
+        </div>
+
+    {% endif %}
+
+</div>
+
+</body>
+</html>

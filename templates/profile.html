@@ -1,232 +1,244 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Fundi Profile</title>
+{% extends "base.html" %}
 
-    <style>
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background: #f4f6fb;
-            margin: 0;
-        }
+{% block content %}
 
-        .container {
-            max-width: 520px;
-            margin: 40px auto;
-        }
+<div style="max-width:520px;margin:auto;padding:15px;">
 
-        .card {
-            background: #fff;
-            border-radius: 18px;
-            padding: 25px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
-            text-align: center;
-        }
+    <div style="
+        background: #ffffff;
+        border-radius: 20px;
+        padding: 25px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        text-align: center;
+        color: #1f2937;
+    ">
 
-        .profile-img {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 4px solid #eee;
-            margin-bottom: 15px;
-        }
+        <!-- PROFILE IMAGE -->
+        {% set img = fundi.image %}
+        <img src="{{ url_for('static', filename='images/' + (img if img else 'default.png')) }}"
+             style="
+                width:130px;
+                height:130px;
+                border-radius:50%;
+                object-fit:cover;
+                border:4px solid #e5e7eb;
+                margin-bottom:15px;
+                box-shadow:0 5px 15px rgba(0,0,0,0.1);
+             ">
 
-        h2 {
-            margin: 10px 0;
-        }
+        <h2 style="margin:10px 0;color:#111827;font-size:22px;">
+            {{ fundi.name }}
+        </h2>
 
-        .badge {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            margin: 5px;
-            color: white;
-        }
+        <!-- BADGES -->
+        <div style="margin:10px 0;">
+            {% if fundi.featured_until and fundi.featured_until > now %}
+                <span style="
+                    background: linear-gradient(45deg, #f59e0b, #f97316);
+                    color:white;
+                    padding:6px 14px;
+                    border-radius:20px;
+                    font-size:12px;
+                    margin-right:5px;
+                    font-weight:bold;
+                ">
+                    ⭐ Featured
+                </span>
 
-        .featured { background: orange; }
-        .boost { background: green; }
-
-        .info {
-            margin-top: 20px;
-            text-align: left;
-        }
-
-        .info p {
-            margin: 8px 0;
-        }
-
-        .locked {
-            color: red;
-            font-weight: bold;
-        }
-
-        .btn {
-            display: block;
-            padding: 12px;
-            margin-top: 12px;
-            background: #007bff;
-            color: white;
-            border-radius: 10px;
-            text-decoration: none;
-            border: none;
-            cursor: pointer;
-            text-align: center;
-        }
-
-        .btn:hover {
-            background: #0056b3;
-        }
-
-        .btn-green { background: #28a745; }
-        .btn-green:hover { background: #1e7e34; }
-
-        .btn-orange { background: orange; }
-        .btn-orange:hover { background: #cc8400; }
-
-        .section {
-            margin-top: 25px;
-            text-align: left;
-            padding: 15px;
-            background: #f9fafc;
-            border-radius: 12px;
-        }
-
-        input {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 8px;
-            border-radius: 8px;
-            border: 1px solid #ddd;
-        }
-
-        .payment-box {
-            background: #fff3cd;
-            border-left: 5px solid orange;
-            padding: 12px;
-            border-radius: 10px;
-            margin-bottom: 10px;
-            font-size: 14px;
-        }
-    </style>
-</head>
-
-<body>
-
-<div class="container">
-    <div class="card">
-
-        <!-- IMAGE -->
-        {% if fundi.image %}
-            <img src="{{ url_for('static', filename='images/' + fundi.image) }}" class="profile-img">
-        {% else %}
-            <img src="{{ url_for('static', filename='images/default.png') }}" class="profile-img">
-        {% endif %}
-
-        <!-- NAME -->
-        <h2>{{ fundi.name }}</h2>
-
-        <!-- STATUS -->
-        {% if fundi.featured_until and fundi.featured_until > now %}
-            <span class="badge featured">⭐ Featured</span>
-        {% endif %}
-
-        {% if fundi.featured_until and fundi.featured_until > now %}
-            {% if fundi.boost_until and fundi.boost_until > now %}
-                <span class="badge boost">🚀 Boosted</span>
-            {% endif %}
-        {% endif %}
-
-        <!-- INFO -->
-        <div class="info">
-            <p><strong>Skills:</strong>  {{ fundi.skills if fundi.skills and fundi.skills not in ["", "Haijatajwa", "Not specified"] else "Not specified" }}</p>
-            <p><strong>Experience:</strong> {{ fundi.experience if fundi.experience and fundi.experience not in ["", "Haijatajwa", "Not specified"] else "Not specified" }}</p>
-            <p><strong>Location:</strong> {{ fundi.location }}</p>
-
-            <!-- CONTACT LOGIC -->
-            {% if is_owner or is_unlocked %}
-                <p><strong>📞 Phone:</strong> {{ fundi.phone }}</p>
-                <p><strong>📧 Email:</strong> {{ fundi.email }}</p>
-
-            {% else %}
-                <p class="locked">📞 Phone Locked</p>
-                <p class="locked">📧 Email Locked</p>
-
-                {% if role == 'contractor' and not is_owner %}
-                    <form method="POST" action="{{ url_for('request_contact', fundi_id=fundi.id) }}">
-                        <button class="btn">🔓 Unlock Contact (500 TZS)</button>
-                    </form>
+                {% if fundi.boost_until and fundi.boost_until > now %}
+                    <span style="
+                        background: linear-gradient(45deg, #22c55e, #16a34a);
+                        color:white;
+                        padding:6px 14px;
+                        border-radius:20px;
+                        font-size:12px;
+                        font-weight:bold;
+                    ">
+                        🚀 Boosted
+                    </span>
                 {% endif %}
             {% endif %}
         </div>
 
-        <!-- OWNER SECTION -->
+        <!-- INFO -->
+        <div style="
+            text-align:left;
+            margin-top:20px;
+            background:#f9fafb;
+            padding:15px;
+            border-radius:12px;
+            box-shadow: inset 0 0 0 1px #e5e7eb;
+        ">
+
+            <p>
+    <strong>Skills:</strong>
+
+    <span style="
+        color:#38bdf8;
+        font-weight:600;
+        line-height:1.7;
+    ">
+
+        {% if fundi.skills %}
+
+            {{ ''.join(fundi.skills) }}
+
+        {% else %}
+            Not specified
+        {% endif %}
+
+    </span>
+</p>
+
+            <p><strong>📊 Experience:</strong>
+                <span style="color:#374151;">
+                    {{ fundi.experience if fundi.experience else "Not specified" }}
+                </span>
+            </p>
+
+            <p><strong>📍 Location:</strong>
+                <span style="color:#374151;">{{ fundi.location }}</span>
+            </p>
+
+            <p><strong>📞 Phone:</strong>
+                <span style="color:#374151;">{{ fundi.phone }}</span>
+            </p>
+
+            <p><strong>📧 Email:</strong>
+                <span style="color:#374151;">{{ fundi.email }}</span>
+            </p>
+
+        </div>
+
+        <!-- ========================= -->
+        <!-- FEATURE & BOOST SECTION -->
+        <!-- ========================= -->
         {% if is_owner %}
 
-            <a href="{{ url_for('update_profile') }}" class="btn">
-                ✏️ Edit Profile
-            </a>
+        <div style="
+            margin-top:20px;
+            padding:15px;
+            background:#f9f9f9;
+            border-radius:15px;
+            box-shadow:0 5px 15px rgba(0,0,0,0.05);
+            text-align:left;
+        ">
 
-            <a href="/my_requests" class="btn">
-                📊 My Requests
-            </a>
+            <h3 style="text-align:center;">💰 Upgrade Profile</h3>
 
-            <!-- PROMOTE -->
-            <div class="section">
+            <!-- PAYMENT INFO -->
+            <div style="
+                margin:10px 0 15px 0;
+                padding:12px;
+                background:#fff7ed;
+                border-left:5px solid #f59e0b;
+                border-radius:10px;
+            ">
 
-                <h3>💰 Promote Profile</h3>
-
-                <div class="payment-box">
-                    📲 Lipa kupitia M-PESA <br>
-                    Namba: <strong>+255799978711</strong><br>
-                    Jina: <strong>METHOD CORNEL JOHN</strong>
-                </div>
-
-                <!-- FEATURE -->
-                {% if not fundi.featured_until or fundi.featured_until <= now %}
-
-                    <form action="/request_feature/{{ fundi.id }}" method="POST">
-                        <input type="text" name="phone" placeholder="Namba uliyolipia" required>
-                        <input type="text" name="transaction_id" placeholder="Transaction ID" required>
-
-                        <button class="btn btn-orange">
-                            ⭐ Lipia FEATURE (3000 TZS / siku 30)Profile yako ionekane juu
-                        </button>
-                    </form>
-
-                {% else %}
-                    <p>⭐ Active until {{ fundi.featured_until }}</p>
-                {% endif %}
-
-                <!-- BOOST -->
-                {% if fundi.featured_until and fundi.featured_until > now %}
-
-                    {% if not fundi.boost_until or fundi.boost_until <= now %}
-
-                        <form action="/request_boost/{{ fundi.id }}" method="POST">
-                            <input type="text" name="phone" placeholder="Namba uliyolipia" required>
-                            <input type="text" name="transaction_id" placeholder="Transaction ID" required>
-
-                            <button class="btn btn-green">
-                                🚀 Lipia BOOST (2000 TZS / siku 3)Profile yako ionekane juu zaidi
-                            </button>
-                        </form>
-
-                    {% else %}
-                        <p>🚀 Boost Active until {{ fundi.boost_until }}</p>
-                    {% endif %}
-
-                {% else %}
-                    <p class="locked">🚫 Boost inahitaji Feature kwanza</p>
-                {% endif %}
+                <strong>📌 Payment Info</strong><br>
+                <p style="margin:5px 0;">👤 Jina: METHOD CORNEL JOHN</p>
+                <p style="margin:5px 0;">📱 M-Pesa: +255799978711</p>
 
             </div>
+
+            <!-- ⭐ FEATURE -->
+            <form method="POST" action="{{ url_for('request_feature', id=fundi.id) }}">
+
+                <input type="text" name="phone" placeholder="Phone" required
+                       style="width:100%;padding:10px;margin-top:10px;border:1px solid #ddd;border-radius:10px;">
+
+                <input type="text" name="transaction_id" placeholder="Transaction ID" required
+                       style="width:100%;padding:10px;margin-top:10px;border:1px solid #ddd;border-radius:10px;">
+
+                <button style="
+                    width:100%;
+                    padding:12px;
+                    background:linear-gradient(45deg,#f59e0b,#f97316);
+                    color:white;
+                    border:none;
+                    margin-top:10px;
+                    border-radius:10px;
+                    font-weight:bold;
+                ">
+                    ⭐ Request Feature (3,000 TZS)
+                </button>
+            </form>
+
+            <!-- 🚀 BOOST -->
+            {% if fundi.featured_until and fundi.featured_until > now %}
+
+            <form method="POST" action="{{ url_for('request_boost', id=fundi.id) }}" style="margin-top:15px;">
+
+                <input type="text" name="phone" placeholder="Phone" required
+                       style="width:100%;padding:10px;margin-top:10px;border:1px solid #ddd;border-radius:10px;">
+
+                <input type="text" name="transaction_id" placeholder="Transaction ID" required
+                       style="width:100%;padding:10px;margin-top:10px;border:1px solid #ddd;border-radius:10px;">
+
+                <button style="
+                    width:100%;
+                    padding:12px;
+                    background:linear-gradient(45deg,#22c55e,#16a34a);
+                    color:white;
+                    border:none;
+                    margin-top:10px;
+                    border-radius:10px;
+                    font-weight:bold;
+                ">
+                    🚀 Request Boost (2,000 TZS)
+                </button>
+            </form>
+
+            {% else %}
+
+            <div style="
+                margin-top:15px;
+                padding:12px;
+                background:#fee2e2;
+                color:#b91c1c;
+                border-radius:10px;
+                font-weight:bold;
+            ">
+                🔒 Boost imefungwa. Lazima ulipe ⭐ Feature kwanza.
+            </div>
+
+            {% endif %}
+
+        </div>
+
+        <!-- ACTION BUTTONS -->
+        <a href="{{ url_for('update_profile') }}"
+           style="
+                display:block;
+                margin-top:15px;
+                padding:12px;
+                background:#2563eb;
+                color:white;
+                border-radius:10px;
+                text-decoration:none;
+                font-weight:bold;
+           ">
+            ✏️ Edit Profile
+        </a>
+
+        <a href="/my_requests"
+           style="
+                display:block;
+                margin-top:10px;
+                padding:12px;
+                background:#16a34a;
+                color:white;
+                border-radius:10px;
+                text-decoration:none;
+                font-weight:bold;
+           ">
+            📊 My Requests
+        </a>
 
         {% endif %}
 
     </div>
+
 </div>
 
-</body>
-</html>
+{% endblock %}

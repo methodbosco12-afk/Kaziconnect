@@ -1,50 +1,104 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Results</title>
+    <title>Results - KaziConnect</title>
 
     <style>
+        /* 🌌 BACKGROUND */
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
-            background: #f4f6fb;
             margin: 0;
+            min-height: 100vh;
+
+            background: linear-gradient(
+                135deg,
+                #0f172a 0%,
+                #1e3a8a 40%,
+                #0f766e 100%
+            );
+
+            overflow-x: hidden;
         }
 
+        /* ✨ GLOW EFFECT */
+        body::before {
+            content: "";
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            background: #38bdf8;
+            filter: blur(160px);
+            opacity: 0.15;
+            top: -120px;
+            left: -120px;
+            z-index: -1;
+        }
+
+        body::after {
+            content: "";
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            background: #22c55e;
+            filter: blur(160px);
+            opacity: 0.12;
+            bottom: -120px;
+            right: -120px;
+            z-index: -1;
+        }
+
+        /* 📦 CONTAINER */
         .container {
             max-width: 800px;
             margin: 30px auto;
             padding: 10px;
         }
 
+        /* 🔥 TITLE (SAFE GRADIENT TEXT - NO ERROR) */
         .title {
             text-align: center;
-            font-size: 24px;
+            font-size: 26px;
             margin-bottom: 5px;
-            color: #222;
+
+            background: linear-gradient(90deg,#fff,#38bdf8,#22c55e);
+
+            background-clip: text;
+            -webkit-background-clip: text;
+
+            color: transparent;
+            -webkit-text-fill-color: transparent;
         }
 
         .subtitle {
             text-align: center;
-            color: #666;
+            color: #cbd5e1;
             margin-bottom: 20px;
         }
 
-        /* CARD */
+        /* 🧊 GLASS CARD */
         .fundi-item {
-            background: #fff;
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(14px);
+
+            border: 1px solid rgba(255,255,255,0.12);
+
             display: flex;
             justify-content: space-between;
             align-items: center;
+
             padding: 14px 16px;
             margin: 10px 0;
-            border-radius: 14px;
-            box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+            border-radius: 16px;
+
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+
             transition: 0.25s ease;
+
+            color: #e2e8f0;
         }
 
         .fundi-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 22px rgba(0,0,0,0.10);
+            transform: translateY(-3px);
         }
 
         /* LEFT SIDE */
@@ -56,19 +110,18 @@
 
         .number {
             font-weight: bold;
-            color: #888;
+            color: #94a3b8;
             width: 25px;
         }
 
         .name {
             font-size: 16px;
             font-weight: 600;
-            color: #222;
         }
 
         /* BUTTON */
         .view-btn {
-            background: linear-gradient(135deg, #007bff, #00c6ff);
+            background: linear-gradient(90deg,#38bdf8,#22c55e);
             color: white;
             padding: 8px 14px;
             border-radius: 10px;
@@ -82,7 +135,7 @@
             transform: scale(1.05);
         }
 
-        /* FEATURED BADGE */
+        /* BADGES */
         .featured-badge {
             background: linear-gradient(45deg, #FFD700, #FFA500);
             color: white;
@@ -90,40 +143,25 @@
             border-radius: 20px;
             font-size: 12px;
             font-weight: bold;
-            display: inline-block;
-            animation: pulse 1.5s infinite;
             margin-left: 6px;
         }
 
-        /* BOOST */
         .boosted {
-            color: orange;
+            color: #fbbf24;
             font-weight: bold;
             margin-left: 6px;
             font-size: 13px;
         }
 
-        @keyframes pulse {
-            0% {
-                transform: scale(1);
-            }
-            50% {
-                transform: scale(1.08);
-            }
-            100% {
-                transform: scale(1);
-            }
-        }
-
         /* NO RESULTS */
         .no-results {
             text-align: center;
-            color: red;
+            color: #f87171;
             font-weight: bold;
             margin-top: 50px;
         }
 
-        /* MOBILE */
+        /* 📱 MOBILE */
         @media (max-width: 600px) {
             .fundi-item {
                 flex-direction: column;

@@ -1,1 +1,213 @@
-📞 {{ fundi.phone }}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Contact Us - KaziConnect</title>
+
+    <style>
+        /* 🌌 BACKGROUND */
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+
+            background: linear-gradient(
+                135deg,
+                #0f172a 0%,
+                #1e3a8a 40%,
+                #0f766e 100%
+            );
+
+            overflow-x: hidden;
+        }
+
+        /* ✨ GLOW EFFECT */
+        body::before {
+            content: "";
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            background: #38bdf8;
+            filter: blur(160px);
+            opacity: 0.15;
+            top: -120px;
+            left: -120px;
+            z-index: -1;
+        }
+
+        body::after {
+            content: "";
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            background: #22c55e;
+            filter: blur(160px);
+            opacity: 0.12;
+            bottom: -120px;
+            right: -120px;
+            z-index: -1;
+        }
+
+        /* 📦 CONTAINER */
+        .container {
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 35px;
+
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(14px);
+
+            border-radius: 22px;
+            border: 1px solid rgba(255,255,255,0.12);
+
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+
+            color: #e2e8f0;
+        }
+
+        /* 🔥 TITLE (SAFE GRADIENT TEXT) */
+        h1 {
+            text-align: center;
+            font-size: 38px;
+            margin-bottom: 8px;
+
+            background: linear-gradient(90deg, #ffffff, #38bdf8, #22c55e);
+
+            /* SAFE COMPATIBLE VERSION */
+            background-clip: text;
+            -webkit-background-clip: text;
+
+            color: transparent;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.subtitle {
+            text-align: center;
+            color: #cbd5e1;
+            margin-bottom: 25px;
+        }
+
+        /* 🔘 BUTTONS */
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 25px;
+        }
+
+        .btn {
+            padding: 12px 18px;
+            border-radius: 14px;
+            font-weight: bold;
+            text-decoration: none;
+            color: white;
+            transition: 0.3s;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+        .whatsapp {
+            background: linear-gradient(90deg, #22c55e, #25D366);
+        }
+
+        .email {
+            background: linear-gradient(90deg, #3b82f6, #60a5fa);
+        }
+
+        /* 📄 FORM */
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        input, textarea {
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            outline: none;
+            font-size: 15px;
+        }
+
+        textarea {
+            min-height: 130px;
+            resize: none;
+        }
+
+        /* 🚀 SUBMIT BUTTON */
+        .submit-btn {
+            background: linear-gradient(90deg, #38bdf8, #22c55e);
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .submit-btn:hover {
+            transform: scale(1.03);
+        }
+
+        /* 📱 MOBILE */
+        @media (max-width: 768px) {
+            .container {
+                margin: 20px;
+                padding: 25px;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>📞 Contact KaziConnect</h1>
+    <p class="subtitle">Chagua njia rahisi ya kuwasiliana nasi</p>
+
+    <!-- BUTTONS -->
+    <div class="btn-group">
+
+        <a href="https://wa.me/255799978711"
+           target="_blank"
+           class="btn whatsapp">
+           💬 WhatsApp
+        </a>
+
+        <a href="mailto:support@kaziconnect.com"
+           class="btn email">
+           📧 Email
+        </a>
+
+    </div>
+
+    <!-- FORM -->
+    <form method="POST" action="/send_support_message">
+
+        <input type="text" name="name" placeholder="Jina lako" required>
+
+        <input type="text" name="phone" placeholder="Namba ya simu">
+
+        <input type="text" name="subject" placeholder="Kichwa cha ujumbe" required>
+
+        <textarea name="message" placeholder="Andika ujumbe wako..." required></textarea>
+
+        <button type="submit" class="submit-btn">
+            🚀 Tuma Ujumbe
+        </button>
+
+    </form>
+
+</div>
+
+</body>
+</html>

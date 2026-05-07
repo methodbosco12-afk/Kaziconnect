@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>KaziConnect</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+
+        /* 🌈 ANIMATED BACKGROUND */
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            color: white;
+
+            background: linear-gradient(-45deg, #0f172a, #1e293b, #0ea5e9, #22c55e);
+            background-size: 400% 400%;
+            animation: gradientBG 12s ease infinite;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* 🔥 OVERLAY (improves readability) */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.35);
+            z-index: 0;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 220px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            padding: 20px;
+
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(12px);
+
+            box-shadow: 2px 0 12px rgba(0,0,0,0.2);
+            z-index: 2;
+        }
+
+        .sidebar h3 {
+            color: #ffffff;
+            margin-bottom: 25px;
+        }
+
+        .sidebar a {
+            display: block;
+            padding: 10px;
+            border-radius: 10px;
+            text-decoration: none;
+            color: white;
+            margin-bottom: 8px;
+            transition: 0.2s;
+            background: rgba(255,255,255,0.05);
+        }
+
+        .sidebar a:hover {
+            background: rgba(255,255,255,0.15);
+        }
+
+        .logout {
+            color: #ff4d4d !important;
+        }
+
+        /* MAIN CONTENT */
+        .content {
+            margin-left: 240px;
+            padding: 20px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* 📱 MOBILE FIX */
+        @media (max-width: 768px) {
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .sidebar a {
+                flex: 1 1 40%;
+                text-align: center;
+                font-size: 14px;
+            }
+
+            .content {
+                margin-left: 0;
+                padding-bottom: 80px;
+            }
+        }
+
+        /* ✨ CARDS STYLE GLOBAL */
+        .card {
+            background: rgba(255,255,255,0.10);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 15px;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+
+    <h3>⚡ KaziConnect</h3>
+
+    <a href="/dashboard">🏠 Dashboard</a>
+    <a href="/my_profile">👤 My Profile</a>
+    <a href="/about">📌 About</a>
+    <a href="/contact">📞 Contact</a>
+    <a href="/notifications">🔔 Notifications</a>
+    <a href="/settings">⚙️ Settings</a>
+
+    <hr style="border:1px solid rgba(255,255,255,0.1);">
+
+    <a href="/logout" class="logout">🚪 Logout</a>
+
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+    {% block content %}
+    {% endblock %}
+
+</div>
+
+</body>
+</html>

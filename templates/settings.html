@@ -1,0 +1,66 @@
+<h2>⚙️ Settings</h2>
+
+<!-- 🔐 CHANGE PASSWORD -->
+<form method="POST">
+    <input type="hidden" name="action" value="change_password">
+
+    <h3>🔐 Change Password</h3>
+
+    <input type="password" name="current_password" placeholder="Current Password" required>
+    <input type="password" name="new_password" placeholder="New Password" required>
+    <input type="password" name="confirm_password" placeholder="Confirm Password" required>
+
+    <button type="submit">Change Password</button>
+</form>
+
+<hr>
+
+<!-- 📱 CONTACT -->
+<form method="POST">
+    <input type="hidden" name="action" value="update_contact">
+
+    <h3>📱 Email & Phone</h3>
+
+    <input type="text" name="phone" value="{{ user.phone }}" placeholder="Phone">
+    <input type="email" name="email" value="{{ user.email }}" placeholder="Email">
+
+    <button type="submit">Update</button>
+</form>
+
+<hr>
+
+<!-- 🔔 NOTIFICATIONS -->
+<form method="POST">
+    <input type="hidden" name="action" value="notifications">
+
+    <h3>🔔 Notifications</h3>
+
+    <label>
+        <input type="checkbox" name="sms_notifications"
+               {% if user.sms_notifications %}checked{% endif %}>
+        SMS Notifications
+    </label>
+
+    <label>
+        <input type="checkbox" name="email_notifications"
+               {% if user.email_notifications %}checked{% endif %}>
+        Email Notifications
+    </label>
+
+    <button type="submit">Save</button>
+</form>
+
+<hr>
+
+<!-- 🗑️ DELETE ACCOUNT -->
+<form method="POST">
+    <input type="hidden" name="action" value="delete_account">
+
+    <h3 style="color:red;">Delete Account</h3>
+
+    <input type="password" name="password" placeholder="Confirm Password" required>
+
+    <button type="submit" style="background:red;color:white;">
+        Delete Account
+    </button>
+</form>
