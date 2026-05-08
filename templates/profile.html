@@ -80,15 +80,19 @@
     ">
 
         {% if fundi.skills %}
+    {% for skill in fundi.skills %}
+        <span class="skill">
+            {{ skill }}
+        </span>
+    {% endfor %}
+{% else %}
+    Not specified
+{% endif %}
 
-            {{ ''.join(fundi.skills) }}
-
-        {% else %}
-            Not specified
-        {% endif %}
-
-    </span>
+    
 </p>
+
+            
 
             <p><strong>📊 Experience:</strong>
                 <span style="color:#374151;">
@@ -110,9 +114,7 @@
 
         </div>
 
-        <!-- ========================= -->
-        <!-- FEATURE & BOOST SECTION -->
-        <!-- ========================= -->
+        <!-- FEATURE SECTION -->
         {% if is_owner %}
 
         <div style="
@@ -126,7 +128,6 @@
 
             <h3 style="text-align:center;">💰 Upgrade Profile</h3>
 
-            <!-- PAYMENT INFO -->
             <div style="
                 margin:10px 0 15px 0;
                 padding:12px;
@@ -134,14 +135,11 @@
                 border-left:5px solid #f59e0b;
                 border-radius:10px;
             ">
-
                 <strong>📌 Payment Info</strong><br>
                 <p style="margin:5px 0;">👤 Jina: METHOD CORNEL JOHN</p>
                 <p style="margin:5px 0;">📱 M-Pesa: +255799978711</p>
-
             </div>
 
-            <!-- ⭐ FEATURE -->
             <form method="POST" action="{{ url_for('request_feature', id=fundi.id) }}">
 
                 <input type="text" name="phone" placeholder="Phone" required
@@ -164,7 +162,6 @@
                 </button>
             </form>
 
-            <!-- 🚀 BOOST -->
             {% if fundi.featured_until and fundi.featured_until > now %}
 
             <form method="POST" action="{{ url_for('request_boost', id=fundi.id) }}" style="margin-top:15px;">
@@ -206,7 +203,6 @@
 
         </div>
 
-        <!-- ACTION BUTTONS -->
         <a href="{{ url_for('update_profile') }}"
            style="
                 display:block;

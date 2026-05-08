@@ -4,7 +4,6 @@
     <title>Results - KaziConnect</title>
 
     <style>
-        /* 🌌 BACKGROUND */
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
             margin: 0;
@@ -20,7 +19,6 @@
             overflow-x: hidden;
         }
 
-        /* ✨ GLOW EFFECT */
         body::before {
             content: "";
             position: fixed;
@@ -47,26 +45,34 @@
             z-index: -1;
         }
 
-        /* 📦 CONTAINER */
         .container {
             max-width: 800px;
             margin: 30px auto;
             padding: 10px;
         }
 
-        /* 🔥 TITLE (SAFE GRADIENT TEXT - NO ERROR) */
+        /* ✅ SAFE GRADIENT TITLE (FIXED COMPATIBILITY) */
         .title {
             text-align: center;
             font-size: 26px;
             margin-bottom: 5px;
 
-            background: linear-gradient(90deg,#fff,#38bdf8,#22c55e);
+            color: #ffffff; /* fallback */
 
-            background-clip: text;
+            background: linear-gradient(90deg,#ffffff,#38bdf8,#22c55e);
+
             -webkit-background-clip: text;
+            background-clip: text;
 
-            color: transparent;
             -webkit-text-fill-color: transparent;
+        }
+
+        /* fallback for browsers that don't support text-fill */
+        @supports not (-webkit-text-fill-color: transparent) {
+            .title {
+                color: #ffffff;
+                background: none;
+            }
         }
 
         .subtitle {
@@ -75,11 +81,9 @@
             margin-bottom: 20px;
         }
 
-        /* 🧊 GLASS CARD */
         .fundi-item {
             background: rgba(255,255,255,0.08);
             backdrop-filter: blur(14px);
-
             border: 1px solid rgba(255,255,255,0.12);
 
             display: flex;
@@ -91,17 +95,9 @@
             border-radius: 16px;
 
             box-shadow: 0 10px 25px rgba(0,0,0,0.25);
-
-            transition: 0.25s ease;
-
             color: #e2e8f0;
         }
 
-        .fundi-item:hover {
-            transform: translateY(-3px);
-        }
-
-        /* LEFT SIDE */
         .left {
             display: flex;
             align-items: center;
@@ -119,7 +115,6 @@
             font-weight: 600;
         }
 
-        /* BUTTON */
         .view-btn {
             background: linear-gradient(90deg,#38bdf8,#22c55e);
             color: white;
@@ -128,21 +123,14 @@
             text-decoration: none;
             font-size: 13px;
             font-weight: 600;
-            transition: 0.2s ease;
         }
 
-        .view-btn:hover {
-            transform: scale(1.05);
-        }
-
-        /* BADGES */
         .featured-badge {
             background: linear-gradient(45deg, #FFD700, #FFA500);
             color: white;
             padding: 4px 10px;
             border-radius: 20px;
             font-size: 12px;
-            font-weight: bold;
             margin-left: 6px;
         }
 
@@ -153,28 +141,12 @@
             font-size: 13px;
         }
 
-        /* NO RESULTS */
         .no-results {
             text-align: center;
             color: #f87171;
             font-weight: bold;
             margin-top: 50px;
         }
-
-        /* 📱 MOBILE */
-        @media (max-width: 600px) {
-            .fundi-item {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
-
-            .view-btn {
-                width: 100%;
-                text-align: center;
-            }
-        }
-
     </style>
 </head>
 
@@ -195,16 +167,13 @@
     <div class="fundi-item">
 
         <div class="left">
-            <div class="number">
-                {{ loop.index }}.
-            </div>
+            <div class="number">{{ loop.index }}.</div>
 
             <div class="name">
                 {{ fundi.name }}
 
                 {% if fundi.boost_until and fundi.boost_until > now %}
                     <span class="boosted">🔥 Boosted</span>
-
                 {% elif fundi.featured_until and fundi.featured_until > now %}
                     <span class="featured-badge">⭐ Featured</span>
                 {% endif %}

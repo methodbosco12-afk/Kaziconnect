@@ -10,6 +10,11 @@
             min-height: 100vh;
             background: linear-gradient(135deg,#0f172a 0%,#1e3a8a 40%,#0f766e 100%);
             overflow-x: hidden;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
         }
 
         body::before, body::after {
@@ -36,9 +41,8 @@
         }
 
         .container {
+            width: 100%;
             max-width: 420px;
-            margin: 30px auto;
-            padding: 10px;
         }
 
         .card {
@@ -61,21 +65,31 @@
             margin: 10px auto;
         }
 
-        /* ✅ FIXED H2 (COMPATIBILITY SAFE) */
+        /* ✅ FIXED H2 (background-clip safe) */
         h2 {
             font-size: 20px;
             color: #ffffff;
 
             background: linear-gradient(90deg,#ffffff,#38bdf8,#22c55e);
             -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
             background-clip: text;
+
+            /* IMPORTANT FIX */
+            -webkit-text-fill-color: transparent;
         }
 
-        @supports not (background-clip: text) {
+        /* fallback for old browsers */
+        @supports not (-webkit-background-clip: text) {
             h2 {
-                color: #ffffff;
                 background: none;
+                color: #ffffff;
+            }
+        }
+
+        /* extra Safari/WebView safety */
+        @media screen and (-webkit-min-device-pixel-ratio:0) {
+            h2 {
+                -webkit-text-fill-color: transparent;
             }
         }
 
@@ -85,6 +99,7 @@
             font-size: 11px;
             margin: 4px;
             color: white;
+            display: inline-block;
         }
 
         .featured { background: linear-gradient(45deg,#facc15,#f59e0b); }
@@ -96,6 +111,27 @@
             background: rgba(255,255,255,0.06);
             padding: 12px;
             border-radius: 12px;
+        }
+
+        .info p {
+            margin: 6px 0;
+        }
+
+        .skills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .skill {
+            background: rgba(56,189,248,0.18);
+            color: #ffffff;
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            white-space: nowrap;
+            border: 1px solid rgba(255,255,255,0.15);
         }
 
         .btn {
@@ -155,7 +191,6 @@
             cursor:pointer;
             font-size:20px;
         }
-
     </style>
 </head>
 
@@ -184,30 +219,19 @@
 
         <div class="info">
 
-            <p>
-    <strong>Skills:</strong>
+            <p><strong>Skills:</strong></p>
 
-    <span style="
-        color:#38bdf8;
-        font-weight:600;
-        line-height:1.7;
-    ">
-
-        {% if fundi.skills %}
-
-            {{ ''.join(fundi.skills) }}
-
-        {% else %}
-            Not specified
-        {% endif %}
-
-    </span>
-</p>
+            <div class="skills">
+                {% for skill in fundi.skills %}
+                    <span class="skill">{{ skill }}</span>
+                {% endfor %}
+            </div>
 
             <p><strong>Experience:</strong> {{ fundi.experience }}</p>
             <p><strong>Location:</strong> {{ fundi.location }}</p>
             <p><strong>Phone:</strong> {{ fundi.phone }}</p>
             <p><strong>Email:</strong> {{ fundi.email }}</p>
+
         </div>
 
         <button class="btn btn-hire" onclick="openModal()">

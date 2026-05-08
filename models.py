@@ -49,6 +49,28 @@ class FundiProfile(db.Model):
     featured_until = db.Column(db.DateTime)
     boost_until = db.Column(db.DateTime)
 
+    # 🔥 ADD THIS
+    featured_requests = db.relationship(
+        'FeaturedRequest',
+        backref='fundi',
+        cascade="all, delete-orphan",
+        passive_deletes=True
+    )
+
+    hire_requests = db.relationship(
+        'HireRequest',
+        backref='fundi',
+        cascade="all, delete-orphan",
+        passive_deletes=True
+    )
+
+    profile_updates = db.relationship(
+        'ProfileUpdate',
+        backref='fundi',
+        cascade="all, delete-orphan",
+        passive_deletes=True
+    )
+
 
 # ⭐ FEATURE / BOOST REQUEST
 class FeaturedRequest(db.Model):
@@ -56,7 +78,10 @@ class FeaturedRequest(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
-    fundi_id = db.Column(db.Integer, db.ForeignKey('fundi_profile.id'))
+    fundi_id = db.Column(
+    db.Integer,
+    db.ForeignKey('fundi_profile.id', ondelete='CASCADE')
+)
 
     phone = db.Column(db.String(20))
     transaction_id = db.Column(db.String(100))
@@ -137,7 +162,10 @@ class ProfileUpdate(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
-    fundi_id = db.Column(db.Integer, db.ForeignKey('fundi_profile.id'))
+    fundi_id = db.Column(
+    db.Integer,
+    db.ForeignKey('fundi_profile.id', ondelete='CASCADE')
+)
 
     field_changed = db.Column(db.String(50))
     old_value = db.Column(db.String(255))
@@ -175,10 +203,14 @@ class Notification(db.Model):
 
 class HireRequest(db.Model):
     __tablename__ = "hire_request"
-    
+
     id = db.Column(db.Integer, primary_key=True)
 
-    fundi_profile_id = db.Column(db.Integer, db.ForeignKey('fundi_profile.id'), nullable=False)
+    fundi_profile_id = db.Column(
+    db.Integer,
+    db.ForeignKey('fundi_profile.id', ondelete='CASCADE'),
+    nullable=False
+)
 
     client_name = db.Column(db.String(100), nullable=False)
     phone = db.Column(db.String(20), nullable=False)

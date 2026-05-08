@@ -8,7 +8,7 @@ from utils.notifications import notify_user
 from flask_migrate import Migrate
 from datetime import datetime, timedelta, timezone
 from extensions import db, mail
-from models import SupportMessage, User, FundiProfile, FeaturedRequest, OTP, ContactUnlock,IpBlock,ActivityLog,ProfileUpdate,Notification
+from models import SupportMessage, User, FundiProfile, FeaturedRequest, OTP, ContactUnlock,IpBlock,ActivityLog,ProfileUpdate,Notification,HireRequest
 import os
 import time
 from dotenv import load_dotenv
@@ -19,6 +19,24 @@ import urllib.parse
 import africastalking
 from functools import wraps
 from auth.admin_seed import create_admin
+
+import re
+
+def clean_skill(skill):
+    if not skill:
+        return None
+
+    skill = skill.strip().lower()
+
+    # convert merged words
+    skill = skill.replace("softwaredeveloper", "software developer")
+    skill = skill.replace("webdesigner", "web designer")
+    skill = skill.replace("graphicdesigner", "graphic designer")
+
+    # 🔥 convert space → hyphen
+    skill = re.sub(r'\s+', '-', skill)
+
+    return skill
 
 
 def admin_required(f):
@@ -245,41 +263,53 @@ def admin_login():
 @app.route('/search', methods=['GET'])
 def search():
 
-    skills = (request.args.get('skills') or '').strip()
-    experience = (request.args.get('experience') or '').strip()
-    location = (request.args.get('location') or '').strip()
+    skills = (request.args.get('skills') or '').strip().lower()
+    experience = (request.args.get('experience') or '').strip().lower()
+    location = (request.args.get('location') or '').strip().lower()
+
+    # kama hakuna input yoyote
+    if not skills and not experience and not location:
+        return render_template("search.html")
+
+    # redirect kwenda results
+    return redirect(url_for(
+        'results',
+        skills=skills,
+        experience=experience,
+        location=location
+    ))
+
+@app.route('/results', methods=['GET'])
+def results():
+
+    skills = (request.args.get('skills') or '').strip().lower()
+    experience = (request.args.get('experience') or '').strip().lower()
+    location = (request.args.get('location') or '').strip().lower()
 
     now = datetime.now(timezone.utc)
 
-    # 🚫 kama hakuna search yoyote, usirudishe watu
-    if not skills and not experience and not location:
-        return render_template("search.html", results=[], now=now)
-
-    # 🔥 CHUJA DATABASE KABLA YA KURUDISHA
     query = FundiProfile.query.filter(
         FundiProfile.skills.isnot(None),
         FundiProfile.skills != ""
     )
 
-    # 🔍 STRICT FILTERS (HII NDIO MSAADA WA KWELI)
     if skills:
         query = query.filter(
-        FundiProfile.skills.ilike(f"%{skills},%") |
-        FundiProfile.skills.ilike(f"%,{skills}%") |
-        FundiProfile.skills.ilike(f"% {skills} %") |
-        FundiProfile.skills.ilike(f"{skills}")
-    )
+            FundiProfile.skills.ilike(f"%{skills}%")
+        )
 
     if experience:
-        query = query.filter(FundiProfile.experience.ilike(f"%{experience}%"))
+        query = query.filter(
+            FundiProfile.experience.ilike(f"%{experience}%")
+        )
 
     if location:
-        query = query.filter(FundiProfile.location.ilike(f"%{location}%"))
+        query = query.filter(
+            FundiProfile.location.ilike(f"%{location}%")
+        )
 
-    # 🚀 PATA RESULTS MOJA KWA MOJA
-    results = query.limit(50).all()
+    results = query.all()
 
-    # ⭐ SORT (featured & boost juu)
     results.sort(
         key=lambda f: (
             1 if f.boost_until and f.boost_until > now else 0,
@@ -289,61 +319,9 @@ def search():
     )
 
     return render_template(
-        "search.html",
-        results=results,
-        skills=skills,
-        experience=experience,
-        location=location,
-        now=now
-    )
-
-@app.route('/results', methods=['GET'])
-def results():
-
-    skills = (request.args.get('skills') or '').strip().lower()
-    experience = (request.args.get('experience') or '').strip().lower()
-    location = request.args.get('location')
-
-    query = FundiProfile.query
-
-    # 🔥 skills (strict improved)
-    if skills:
-        query = query.filter(
-            FundiProfile.skills.ilike(f"%{skills},%") |
-            FundiProfile.skills.ilike(f"%,{skills}%") |
-            FundiProfile.skills.ilike(f"% {skills} %") |
-            FundiProfile.skills.ilike(f"{skills}")
-        )
-
-    # 🔥 experience (improved)
-    if experience:
-        query = query.filter(
-            FundiProfile.experience.ilike(f"%{experience}%")
-        )
-
-    # 🔥 location (unchanged)
-    if location:
-        query = query.filter(
-            FundiProfile.location.contains(location)
-        )
-
-    fundis = query.all()
-
-    # 🚀 SORTING LOGIC (UNCHANGED)
-    def sort_key(f):
-        if f.boost_until and f.boost_until > datetime.now(timezone.utc):
-            return 3
-        elif f.featured_until and f.featured_until > datetime.now(timezone.utc):
-            return 2
-        else:
-            return 1
-
-    fundis = sorted(fundis, key=sort_key, reverse=True)
-
-    return render_template(
         "results.html",
-        results=fundis,
-        now=datetime.now(timezone.utc)
+        results=results,
+        now=now
     )
 
 
@@ -453,34 +431,63 @@ def contractor_login():
 
 @app.route('/login/fundi', methods=['GET', 'POST'])
 def fundi_login():
+
     if request.method == 'POST':
-        identifier = request.form['identifier']
-        password = request.form['password']
-        remember = request.form.get('remember')  # 🔥 muhimu
 
-        # 🔍 detect email au phone
+        identifier = request.form.get('identifier', '').strip()
+        password = request.form.get('password')
+        remember = request.form.get('remember')
+
+        if not identifier or not password:
+            return render_template("fundi_login.html", error="All fields required")
+
+        user = None
+
+        # =========================
+        # EMAIL LOGIN (case-insensitive)
+        # =========================
         if "@" in identifier:
-            user = User.query.filter_by(email=identifier.lower().strip(), role='fundi').first()
+
+            email = identifier.lower().strip()
+
+            user = User.query.filter(
+                db.func.lower(User.email) == email,
+                User.role == 'fundi'
+            ).first()
+
+        # =========================
+        # PHONE LOGIN (normalized format)
+        # =========================
         else:
-            user = User.query.filter_by(phone=identifier.strip(), role='fundi').first()
 
-        if user and check_password_hash(user.password, password):
+            phone = format_phone(identifier)
 
-            session.clear()
-            session['user_id'] = user.id
-            session['role'] = 'fundi'
-            session.permanent = True
-            
+            user = User.query.filter_by(
+                phone=phone,
+                role='fundi'
+            ).first()
 
-            # 🔥 REMEMBER ME LOGIC
-            if remember:
-                session.permanent = True   # itaishi siku 7 (uliyoset)
-            else:
-                session.permanent = False  # session inaisha browser ikifungwa
+        # =========================
+        # USER NOT FOUND
+        # =========================
+        if not user:
+            return render_template("fundi_login.html", error="Wrong credentials")
 
-            return redirect(url_for('my_profile'))
+        # =========================
+        # PASSWORD CHECK
+        # =========================
+        if not user.password or not check_password_hash(user.password, password):
+            return render_template("fundi_login.html", error="Wrong credentials")
 
-        return render_template("fundi_login.html", error="Wrong credentials")
+        # =========================
+        # SESSION SETUP
+        # =========================
+        session.clear()
+        session['user_id'] = user.id
+        session['role'] = 'fundi'
+        session.permanent = True if remember else False
+
+        return redirect(url_for('profile_redirect'))
 
     return render_template("fundi_login.html")
 
@@ -612,7 +619,7 @@ def verify_otp(identifier):
 
         session['user_id'] = user.id
 
-        return redirect(url_for('my_profile'))
+        return redirect(url_for('profile_redirect'))
 
     return render_template("verify_otp.html", identifier=identifier)
 
@@ -658,9 +665,12 @@ def register_fundi():
 
     if request.method == 'POST':
 
-        # 🔹 GET FORM DATA
+        # ======================
+        # FORM DATA
+        # ======================
         name = request.form.get('name')
-        skills = clean_skills(request.form.get('skills'))
+
+        skills_raw = request.form.get('skills')
         experience = clean_skills(request.form.get('experience'))
 
         phone = request.form.get('phone').strip().replace(" ", "")
@@ -670,15 +680,15 @@ def register_fundi():
         password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
 
-        # 🔒 PASSWORD MATCH
+        # ======================
+        # VALIDATION
+        # ======================
         if password != confirm_password:
             return render_template("register_fundi.html", error="Passwords do not match")
 
-        # 🔒 PASSWORD LENGTH
         if len(password) < 6:
             return render_template("register_fundi.html", error="Password must be at least 6 characters")
 
-        # 🔒 CHECK EXISTING USER
         existing_user = User.query.filter(
             (User.email == email) | (User.phone == phone)
         ).first()
@@ -686,7 +696,21 @@ def register_fundi():
         if existing_user:
             return render_template("register_fundi.html", error="Email or phone already exists")
 
-        # 📸 IMAGE UPLOAD
+        # ======================
+        # CLEAN SKILLS → LIST
+        # ======================
+        skills_list = []
+
+        if skills_raw:
+            skills_list = [
+                clean_skill(s.strip())
+                for s in skills_raw.split(",")
+                if s.strip()
+            ]
+
+        # ======================
+        # IMAGE UPLOAD
+        # ======================
         file = request.files.get('image')
 
         if not file or file.filename == "":
@@ -698,7 +722,9 @@ def register_fundi():
         filepath = os.path.join(app.root_path, 'static', 'images', unique_name)
         file.save(filepath)
 
-        # 🔐 CREATE USER
+        # ======================
+        # CREATE USER
+        # ======================
         user = User(
             email=email,
             phone=phone,
@@ -709,37 +735,30 @@ def register_fundi():
         db.session.add(user)
         db.session.commit()
 
-        # 👷 CREATE OR UPDATE PROFILE
-        fundi = FundiProfile.query.filter_by(user_id=user.id).first()
+        # ======================
+        # CREATE PROFILE
+        # ======================
+        fundi = FundiProfile(
+            user_id=user.id,
+            name=name,
+            skills=", ".join(skills_list),   # 🔥 ARRAY SAFE
+            experience=experience,
+            phone=phone,
+            email=email,
+            image=unique_name,
+            location=location
+        )
 
-        if fundi:
-            fundi.name = name
-            fundi.skills = skills.lower().strip()
-            fundi.experience = experience
-            fundi.phone = phone
-            fundi.email = email
-            fundi.location = location
-            fundi.image = unique_name
-        else:
-            fundi = FundiProfile(
-                user_id=user.id,
-                name=name,
-                skills=skills.lower().strip(),
-                experience=experience,
-                phone=phone,
-                email=email,
-                image=unique_name,
-                location=location
-            )
-            db.session.add(fundi)
-
+        db.session.add(fundi)
         db.session.commit()
 
-        # 📩 SMS NOTIFICATION (PRODUCTION SAFE)
+        # ======================
+        # SMS
+        # ======================
         try:
             send_sms(
                 phone,
-                "🎉 Karibu KaziConnect! Umefanikiwa kujisajili kama Fundi."
+                "🎉 Karibu KaziConnect! Umefanikiwa kujisajili."
             )
         except Exception as e:
             print("SMS error:", e)
@@ -747,25 +766,6 @@ def register_fundi():
         return redirect(url_for('fundi_login'))
 
     return render_template("register_fundi.html")
-
-@app.route('/my_profile')
-def my_profile():
-
-    if session.get('role') != 'fundi':
-        return redirect(url_for('fundi_login'))
-
-    user = User.query.get(session['user_id'])
-
-    if not user:
-        session.clear()
-        return redirect(url_for('fundi_login'))
-
-    fundi = FundiProfile.query.filter_by(user_id=user.id).first()
-
-    if not fundi:
-        return redirect(url_for('register_fundi'))
-
-    return render_template("profile.html", fundi=fundi)
 
 @app.route('/delete_fundi_account', methods=['POST'])
 def delete_fundi_account():
@@ -802,63 +802,91 @@ def update_profile():
 
     if request.method == 'POST':
 
-        # 🔹 BASIC INFO
-        fundi.name = request.form.get('name')
-        fundi.skills = clean_skills(request.form.get('skills'))
-        fundi.experience = clean_skills(request.form.get('experience'))
-        fundi.location = request.form.get('location')
-        fundi.phone = request.form.get('phone')
-        fundi.email = request.form.get('email')
+        # ======================
+        # OLD VALUES (LOG)
+        # ======================
+        old_email = user.email
+        old_phone = user.phone
 
-        # 🔹 IMAGE UPDATE
+        # ======================
+        # NEW DATA
+        # ======================
+        new_name = request.form.get('name')
+
+        skills_raw = request.form.get('skills')
+        new_experience = clean_skills(request.form.get('experience'))
+        new_location = request.form.get('location')
+
+        new_phone = format_phone(request.form.get('phone'))
+        new_email = request.form.get('email').lower().strip()
+
+        # ======================
+        # CLEAN SKILLS
+        # ======================
+        skills_list = []
+        if skills_raw:
+            skills_list = [
+                clean_skill(s.strip())
+                for s in skills_raw.split(",")
+                if s.strip()
+            ]
+
+        # ======================
+        # UPDATE USER
+        # ======================
+        user.email = new_email
+        user.phone = new_phone
+
+        # ======================
+        # UPDATE PROFILE
+        # ======================
+        fundi.name = new_name
+        fundi.skills = ", ".join(skills_list)   # 🔥 ARRAY CLEAN
+        fundi.experience = new_experience
+        fundi.location = new_location
+        fundi.email = new_email
+        fundi.phone = new_phone
+
+        # ======================
+        # IMAGE
+        # ======================
         file = request.files.get('image')
-        if file and file.filename != '':
-            from werkzeug.utils import secure_filename
-            import os
 
+        if file and file.filename != '':
             filename = secure_filename(file.filename)
             unique_name = str(int(time.time())) + "_" + filename
 
             filepath = os.path.join(app.root_path, 'static', 'images', unique_name)
-
             file.save(filepath)
 
-            print("Saved to:", filepath)
+            fundi.image = unique_name
 
-            fundi.image = filename
-
-        # 🔐 PASSWORD UPDATE (SAFE)
+        # ======================
+        # PASSWORD CHANGE
+        # ======================
         current_password = request.form.get('current_password')
         new_password = request.form.get('new_password')
         confirm_password = request.form.get('confirm_password')
 
-        # kama user ameandika password mpya
         if new_password:
-
-            # hakikisha ameweka current password
-            if not current_password:
-                return "❌ Weka current password"
-
-            # verify current password
-            from werkzeug.security import check_password_hash, generate_password_hash
 
             if not check_password_hash(user.password, current_password):
                 return "❌ Current password si sahihi"
 
-            # confirm password
             if new_password != confirm_password:
                 return "❌ Password hazifanani"
 
-            # minimum length
             if len(new_password) < 6:
-                return "❌ Password lazima iwe angalau herufi 6"
+                return "❌ Password too short"
 
-            # save new password
             user.password = generate_password_hash(new_password)
 
+        # ======================
+        # SAVE
+        # ======================
         db.session.commit()
 
-        return redirect(url_for('my_profile'))
+        return redirect(url_for('profile_redirect'))
 
     return render_template("update_profile.html", fundi=fundi)
 
