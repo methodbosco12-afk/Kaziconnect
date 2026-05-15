@@ -63,7 +63,6 @@
             text-decoration: none;
             border-radius: 8px;
         }
-
     </style>
 </head>
 
@@ -97,17 +96,22 @@
 
         <div class="card blue">
             <h3>Featured Profiles ⭐</h3>
-            <p>{{ featured_count }}</p>
+            <p>{{ active_featured }}</p>
         </div>
 
         <div class="card dark">
             <h3>Boosted Profiles 🚀</h3>
-            <p>{{ boost_count }}</p>
+            <p>{{ active_boosted }}</p>
         </div>
 
         <div class="card red">
-            <h3>Pending Requests</h3>
-            <p>{{ pending_requests }}</p>
+            <h3>Pending Feature Requests</h3>
+            <p>{{ featured_pending }}</p>
+        </div>
+
+        <div class="card red">
+            <h3>Pending Boost Requests</h3>
+            <p>{{ boost_pending }}</p>
         </div>
 
     </div>

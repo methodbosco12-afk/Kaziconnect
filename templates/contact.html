@@ -1,78 +1,149 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Contact Us - KaziConnect</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact KaziConnect</title>
 
     <style>
-        /* 🌌 BACKGROUND */
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
+
+        *{
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body{
+            font-family: 'Segoe UI', Arial, sans-serif;
+
             min-height: 100vh;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            padding: 20px;
 
             background: linear-gradient(
                 135deg,
                 #0f172a 0%,
-                #1e3a8a 40%,
+                #1e3a8a 45%,
                 #0f766e 100%
             );
 
             overflow-x: hidden;
+            position: relative;
         }
 
-        /* ✨ GLOW EFFECT */
-        body::before {
+        /* ✨ Glow Effects */
+        body::before{
             content: "";
+
             position: fixed;
-            width: 500px;
-            height: 500px;
+
+            width: 350px;
+            height: 350px;
+
             background: #38bdf8;
-            filter: blur(160px);
-            opacity: 0.15;
+
             top: -120px;
             left: -120px;
+
+            filter: blur(140px);
+
+            opacity: 0.18;
+
             z-index: -1;
+
+            border-radius: 50%;
         }
 
-        body::after {
+        body::after{
             content: "";
+
             position: fixed;
-            width: 500px;
-            height: 500px;
+
+            width: 350px;
+            height: 350px;
+
             background: #22c55e;
-            filter: blur(160px);
-            opacity: 0.12;
+
             bottom: -120px;
             right: -120px;
+
+            filter: blur(140px);
+
+            opacity: 0.14;
+
             z-index: -1;
+
+            border-radius: 50%;
         }
 
-        /* 📦 CONTAINER */
-        .container {
-            max-width: 900px;
-            margin: 50px auto;
-            padding: 35px;
+        /* 📦 Main Card */
+        .container{
+
+            width: 100%;
+            max-width: 430px;
 
             background: rgba(255,255,255,0.08);
-            backdrop-filter: blur(14px);
 
-            border-radius: 22px;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+
             border: 1px solid rgba(255,255,255,0.12);
 
-            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            border-radius: 28px;
 
-            color: #e2e8f0;
+            padding: 32px 24px;
+
+            box-shadow:
+                0 12px 40px rgba(0,0,0,0.35);
+
+            color: white;
         }
 
-        /* 🔥 TITLE (SAFE GRADIENT TEXT) */
-        h1 {
+        /* 🔥 Logo */
+        .logo{
+            width: 75px;
+            height: 75px;
+
+            margin: auto auto 18px;
+
+            border-radius: 22px;
+
+            background: linear-gradient(
+                135deg,
+                #38bdf8,
+                #22c55e
+            );
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-size: 34px;
+
+            box-shadow:
+                0 8px 25px rgba(56,189,248,0.35);
+        }
+
+        /* 📝 Heading */
+        h1{
             text-align: center;
-            font-size: 38px;
-            margin-bottom: 8px;
 
-            background: linear-gradient(90deg, #ffffff, #38bdf8, #22c55e);
+            font-size: 30px;
+            font-weight: 700;
 
-            /* SAFE COMPATIBLE VERSION */
+            margin-bottom: 10px;
+
+            background: linear-gradient(
+                90deg,
+                #ffffff,
+                #38bdf8,
+                #22c55e
+            );
+
             background-clip: text;
             -webkit-background-clip: text;
 
@@ -80,87 +151,129 @@
             -webkit-text-fill-color: transparent;
         }
 
-        p.subtitle {
+        .subtitle{
             text-align: center;
+
             color: #cbd5e1;
-            margin-bottom: 25px;
+
+            font-size: 15px;
+            line-height: 1.6;
+
+            margin-bottom: 32px;
         }
 
-        /* 🔘 BUTTONS */
-        .btn-group {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-bottom: 25px;
-        }
-
-        .btn {
-            padding: 12px 18px;
-            border-radius: 14px;
-            font-weight: bold;
-            text-decoration: none;
-            color: white;
-            transition: 0.3s;
-        }
-
-        .btn:hover {
-            transform: scale(1.05);
-        }
-
-        .whatsapp {
-            background: linear-gradient(90deg, #22c55e, #25D366);
-        }
-
-        .email {
-            background: linear-gradient(90deg, #3b82f6, #60a5fa);
-        }
-
-        /* 📄 FORM */
-        form {
+        /* 🔘 Buttons */
+        .btn-group{
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 18px;
         }
 
-        input, textarea {
-            padding: 12px;
-            border-radius: 12px;
-            border: none;
-            outline: none;
-            font-size: 15px;
-        }
+        .btn{
 
-        textarea {
-            min-height: 130px;
-            resize: none;
-        }
+            display: flex;
+            align-items: center;
+            gap: 16px;
 
-        /* 🚀 SUBMIT BUTTON */
-        .submit-btn {
-            background: linear-gradient(90deg, #38bdf8, #22c55e);
+            text-decoration: none;
             color: white;
-            padding: 12px;
-            border: none;
-            border-radius: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
+
+            padding: 18px;
+
+            border-radius: 20px;
+
+            transition: 0.3s ease;
+
+            box-shadow:
+                0 8px 24px rgba(0,0,0,0.25);
         }
 
-        .submit-btn:hover {
-            transform: scale(1.03);
+        .btn:hover{
+            transform: translateY(-4px) scale(1.02);
         }
 
-        /* 📱 MOBILE */
-        @media (max-width: 768px) {
-            .container {
-                margin: 20px;
-                padding: 25px;
+        .whatsapp{
+            background: linear-gradient(
+                135deg,
+                #16a34a,
+                #25D366
+            );
+        }
+
+        .email{
+            background: linear-gradient(
+                135deg,
+                #2563eb,
+                #60a5fa
+            );
+        }
+
+        /* 📱 Icon */
+        .icon{
+            width: 52px;
+            height: 52px;
+
+            border-radius: 16px;
+
+            background: rgba(255,255,255,0.18);
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-size: 26px;
+
+            flex-shrink: 0;
+        }
+
+        /* ✍️ Text */
+        .text{
+            display: flex;
+            flex-direction: column;
+        }
+
+        .text strong{
+            font-size: 18px;
+            margin-bottom: 3px;
+        }
+
+        .text small{
+            font-size: 13px;
+            opacity: 0.92;
+        }
+
+        /* 📱 Mobile */
+        @media (max-width: 480px){
+
+            body{
+                padding: 16px;
             }
 
-            h1 {
-                font-size: 28px;
+            .container{
+                padding: 28px 20px;
+                border-radius: 24px;
+            }
+
+            h1{
+                font-size: 26px;
+            }
+
+            .subtitle{
+                font-size: 14px;
+            }
+
+            .btn{
+                padding: 16px;
+            }
+
+            .icon{
+                width: 48px;
+                height: 48px;
+                font-size: 24px;
+            }
+
+            .text strong{
+                font-size: 16px;
             }
         }
 
@@ -169,45 +282,53 @@
 
 <body>
 
-<div class="container">
+    <div class="container">
 
-    <h1>📞 Contact KaziConnect</h1>
-    <p class="subtitle">Chagua njia rahisi ya kuwasiliana nasi</p>
+        <div class="logo">
+            📞
+        </div>
 
-    <!-- BUTTONS -->
-    <div class="btn-group">
+        <h1>Contact KaziConnect</h1>
 
-        <a href="https://wa.me/255799978711"
-           target="_blank"
-           class="btn whatsapp">
-           💬 WhatsApp
-        </a>
+        <p class="subtitle">
+            Chagua njia rahisi ya kuwasiliana nasi
+        </p>
 
-        <a href="mailto:support@kaziconnect.com"
-           class="btn email">
-           📧 Email
-        </a>
+        <div class="btn-group">
+
+            <!-- WhatsApp -->
+            <a href="{{ url_for('contact_form', channel='whatsapp') }}"
+               class="btn whatsapp">
+
+                <div class="icon">
+                    💬
+                </div>
+
+                <div class="text">
+                    <strong>WhatsApp</strong>
+                    <small>Ongea nasi moja kwa moja</small>
+                </div>
+
+            </a>
+
+            <!-- Email -->
+            <a href="{{ url_for('contact_form', channel='email') }}"
+               class="btn email">
+
+                <div class="icon">
+                    📧
+                </div>
+
+                <div class="text">
+                    <strong>Email</strong>
+                    <small>Tuma ujumbe rasmi</small>
+                </div>
+
+            </a>
+
+        </div>
 
     </div>
-
-    <!-- FORM -->
-    <form method="POST" action="/send_support_message">
-
-        <input type="text" name="name" placeholder="Jina lako" required>
-
-        <input type="text" name="phone" placeholder="Namba ya simu">
-
-        <input type="text" name="subject" placeholder="Kichwa cha ujumbe" required>
-
-        <textarea name="message" placeholder="Andika ujumbe wako..." required></textarea>
-
-        <button type="submit" class="submit-btn">
-            🚀 Tuma Ujumbe
-        </button>
-
-    </form>
-
-</div>
 
 </body>
 </html>

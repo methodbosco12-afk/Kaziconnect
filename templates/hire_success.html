@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="success-wrapper">
+
+    <div class="success-card">
+
+        <div class="icon">✅</div>
+
+        <h2>Request Sent Successfully!</h2>
+
+        <p>
+            Umefanikiwa kutuma request kwa <b>{{ fundi.name }}</b>.
+            Atawasiliana nawe muda mfupi ujao.
+        </p>
+
+        <a href="{{ url_for('profile', id=fundi.id) }}" class="btn">
+            🔙 Rudi kwenye Profile
+        </a>
+
+        <a href="{{ url_for('search') }}" class="btn secondary">
+            🔎 Tafuta Fundi Mwingine
+        </a>
+
+    </div>
+
+</div>
+
+<style>
+
+.success-wrapper{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    min-height:80vh;
+    padding:20px;
+}
+
+.success-card{
+    background:#0f172a;
+    padding:40px;
+    border-radius:20px;
+    text-align:center;
+    color:white;
+    max-width:450px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.4);
+}
+
+.icon{
+    font-size:60px;
+    margin-bottom:10px;
+}
+
+h2{
+    margin-bottom:10px;
+}
+
+p{
+    color:#cbd5e1;
+    margin-bottom:25px;
+    line-height:1.5;
+}
+
+.btn{
+    display:block;
+    padding:12px;
+    margin:10px 0;
+    background:#22c55e;
+    color:white;
+    text-decoration:none;
+    border-radius:10px;
+    font-weight:700;
+}
+
+.btn.secondary{
+    background:#3b82f6;
+}
+
+</style>
+
+{% endblock %}

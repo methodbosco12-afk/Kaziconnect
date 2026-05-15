@@ -1,7 +1,7 @@
 from models import User, Notification
-from database import db
+from extensions import db
 from flask_mail import Message
-from app import mail
+from extensions import mail   # ✅ SIO from app
 
 def send_sms(phone, message):
     print("SMS sent to:", phone)

@@ -1,186 +1,210 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Search Fundi - KaziConnect</title>
+<style>
+/* =========================
+   FULL PAGE BACKGROUND
+========================= */
+.search-page{
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            min-height: 100vh;
+    min-height: 100vh;
+    width: 100%;
 
-            background: linear-gradient(
-                135deg,
-                #0f172a 0%,
-                #1e3a8a 40%,
-                #0f766e 100%
-            );
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
-            overflow-x: hidden;
+    padding: 18px;
 
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
+    background:
+        radial-gradient(circle at top,#1e293b,#020617 60%),
+        linear-gradient(135deg,#0f172a,#020617);
 
-        body::before,
-        body::after {
-            content: "";
-            position: fixed;
-            width: 500px;
-            height: 500px;
-            filter: blur(160px);
-            z-index: -1;
-        }
+}
 
-        body::before {
-            background: #38bdf8;
-            opacity: 0.15;
-            top: -120px;
-            left: -120px;
-        }
+/* =========================
+   SEARCH CARD
+========================= */
+.search-card{
 
-        body::after {
-            background: #22c55e;
-            opacity: 0.12;
-            bottom: -120px;
-            right: -120px;
-        }
+    width: 100%;
+    max-width: 480px;
 
-        /* =========================
-           SEARCH CARD
-        ========================== */
-        .search-card {
-            width: 100%;
-            max-width: 420px;
+    padding: 22px;
 
-            background: rgba(255,255,255,0.08);
-            backdrop-filter: blur(14px);
+    border-radius: 22px;
 
-            border-radius: 18px;
-            padding: 22px;
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(22px);
 
-            border: 1px solid rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.12);
 
-            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+    box-shadow:
+        0 10px 40px rgba(0,0,0,0.45),
+        0 0 40px rgba(56,189,248,0.08);
 
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
+    animation: fadeIn 0.5s ease-in-out;
+}
 
-        /* =========================
-           TITLE (FIXED - NO WARNING)
-        ========================== */
-        .title {
-            text-align: center;
-            font-size: 22px;
-            margin-bottom: 10px;
+/* =========================
+   TITLE
+========================= */
+.search-title{
+    font-size: 22px;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 6px;
+}
 
-            color: #ffffff;
-        }
+.search-subtitle{
+    font-size: 13px;
+    color: #94a3b8;
+    margin-bottom: 18px;
+}
 
-        @supports (-webkit-background-clip: text) {
-            .title {
-                background: linear-gradient(90deg,#ffffff,#38bdf8,#22c55e);
-                -webkit-background-clip: text;
-                background-clip: text;
-                -webkit-text-fill-color: transparent;
-            }
-        }
+/* =========================
+   INPUTS
+========================= */
+.search-input{
 
-        label {
-            color: #cbd5e1;
-            font-size: 13px;
-        }
+    width: 100%;
 
-        input {
-            padding: 12px;
-            border-radius: 10px;
-            border: none;
-            outline: none;
+    padding: 15px 14px;
 
-            font-size: 14px;
+    margin-bottom: 12px;
 
-            background: rgba(255,255,255,0.1);
-            color: white;
-        }
+    border-radius: 14px;
 
-        input::placeholder {
-            color: #94a3b8;
-        }
+    border: 1px solid rgba(255,255,255,0.1);
 
-        button {
-            margin-top: 10px;
-            padding: 12px;
+    background: rgba(15,23,42,0.7);
 
-            border: none;
-            border-radius: 12px;
+    color: white;
 
-            background: linear-gradient(90deg,#38bdf8,#22c55e);
-            color: white;
+    font-size: 15px;
 
-            font-weight: bold;
-            cursor: pointer;
+    outline: none;
 
-            transition: 0.3s;
-        }
+    transition: 0.25s;
+}
 
-        button:hover {
-            transform: scale(1.03);
-        }
+.search-input::placeholder{
+    color: #94a3b8;
+}
 
-        /* =========================
-           MOBILE FIX
-        ========================== */
-        @media (max-width: 480px) {
-            body {
-                align-items: center;
-            }
+.search-input:focus{
 
-            .search-card {
-                margin-top: 0;
-            }
-        }
-    </style>
-</head>
+    border-color: #38bdf8;
 
-<body>
+    box-shadow:
+        0 0 0 3px rgba(56,189,248,0.25),
+        0 0 20px rgba(56,189,248,0.15);
+}
 
-    <body>
+/* =========================
+   BUTTON
+========================= */
+.search-btn{
 
-<form class="search-card" method="GET" action="{{ url_for('results') }}">
+    width: 100%;
 
-    <h2 class="title">🔍 Tafuta  Mafundi au wafanyakazi walio karibu yako</h2>
+    padding: 15px;
 
-    <label>Skills</label>
-    <input
-        type="text"
-        name="skills"
-        placeholder="mf: software developer"
-        value="{{ request.args.get('skills','') }}"
-    >
+    margin-top: 6px;
 
-    <label>Experience</label>
-    <input
-        type="text"
-        name="experience"
-        placeholder="mf: 2 years"
-        value="{{ request.args.get('experience','') }}"
-    >
+    border: none;
 
-    <label>Location</label>
-    <input
-        type="text"
-        name="location"
-        placeholder="mf: Dar es Salaam"
-        value="{{ request.args.get('location','') }}"
-    >
+    border-radius: 14px;
 
-    <button type="submit">Search</button>
+    font-size: 15px;
+    font-weight: 700;
 
-</form>
+    cursor: pointer;
 
-</body>
-</html>
+    color: white;
+
+    background: linear-gradient(135deg,#38bdf8,#22c55e,#06b6d4);
+
+    box-shadow: 0 15px 30px rgba(34,197,94,0.25);
+
+    transition: 0.3s;
+}
+
+.search-btn:hover{
+    transform: translateY(-2px);
+    box-shadow: 0 20px 40px rgba(56,189,248,0.35);
+}
+
+/* =========================
+   MOBILE OPTIMIZATION
+========================= */
+@media (max-width: 768px){
+
+    .search-card{
+        width: 100%;
+        max-width: 100%;
+        border-radius: 18px;
+        padding: 18px;
+    }
+
+    .search-title{
+        font-size: 20px;
+    }
+
+    .search-input{
+        font-size: 16px; /* mobile readable */
+    }
+
+    .search-btn{
+        font-size: 16px;
+        padding: 16px;
+    }
+}
+
+/* =========================
+   ANIMATION
+========================= */
+@keyframes fadeIn{
+    from{
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to{
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+
+<div class="search-page">
+
+    <form class="search-card" method="GET" action="{{ url_for('results') }}">
+
+        <div class="search-title">🔍 Tafuta Fundi</div>
+        <div class="search-subtitle">Andika skills, experience au location</div>
+
+        <input
+            class="search-input"
+            type="text"
+            name="skills"
+            placeholder="🔧 Mf: Electrician, Software Developer"
+        >
+
+        <input
+            class="search-input"
+            type="text"
+            name="experience"
+            placeholder="💼 Mf: 2 years experience"
+        >
+
+        <input
+            class="search-input"
+            type="text"
+            name="location"
+            placeholder="📍 Mf: Dar es Salaam"
+        >
+
+        <button type="submit" class="search-btn">
+            🔍 Tafuta Fundi
+        </button>
+
+    </form>
+
+</div>

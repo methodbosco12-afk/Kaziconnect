@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<style>
+
+/* =========================
+   WRAPPER
+========================= */
+.hire-wrapper{
+    min-height: 100vh;
+    padding: 18px;
+    background: radial-gradient(circle at top,#0f172a,#020617);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+}
+
+/* =========================
+   CARD
+========================= */
+.hire-card{
+    width: 100%;
+    max-width: 420px;
+
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(20px);
+
+    border: 1px solid rgba(255,255,255,0.1);
+
+    border-radius: 18px;
+
+    padding: 18px;
+
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+}
+
+/* TITLE */
+.hire-card h2{
+    font-size: 18px;
+    margin-bottom: 14px;
+    font-weight: 800;
+    text-align: center;
+}
+
+/* INPUTS */
+.hire-card input,
+.hire-card textarea{
+
+    width: 100%;
+    padding: 12px;
+
+    margin-bottom: 12px;
+
+    border-radius: 12px;
+
+    border: 1px solid rgba(255,255,255,0.15);
+
+    background: rgba(255,255,255,0.05);
+
+    color: white;
+
+    outline: none;
+
+    font-size: 14px;
+}
+
+.hire-card textarea{
+    min-height: 100px;
+    resize: none;
+}
+
+/* PLACEHOLDER */
+.hire-card input::placeholder,
+.hire-card textarea::placeholder{
+    color: #94a3b8;
+}
+
+/* BUTTON */
+.hire-card button{
+
+    width: 100%;
+    padding: 12px;
+
+    border: none;
+
+    border-radius: 12px;
+
+    font-size: 15px;
+    font-weight: bold;
+
+    color: white;
+
+    background: linear-gradient(135deg,#38bdf8,#22c55e);
+
+    cursor: pointer;
+
+    transition: 0.2s;
+}
+
+.hire-card button:hover{
+    transform: scale(1.02);
+}
+
+/* MOBILE TWEAK */
+@media(max-width:480px){
+    .hire-wrapper{
+        padding: 12px;
+    }
+
+    .hire-card{
+        padding: 16px;
+    }
+}
+
+</style>
+
+<div class="hire-wrapper">
+
+    <div class="hire-card">
+
+        <h2>💼 Hire {{ fundi.name }}</h2>
+
+        <form method="POST">
+
+            <input name="name" placeholder="Your Name" required>
+
+            <input name="phone" placeholder="Phone Number" required>
+
+            <input name="location" placeholder="Your Location" required>
+
+            <textarea name="message" placeholder="Describe the job..."></textarea>
+
+            <button type="submit">🚀 Send Request</button>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}

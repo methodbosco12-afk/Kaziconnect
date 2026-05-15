@@ -1,282 +1,403 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Fundi Profile - KaziConnect</title>
+{% extends "base.html" %}
 
-    <style>
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            margin: 0;
-            min-height: 100vh;
-            background: linear-gradient(135deg,#0f172a 0%,#1e3a8a 40%,#0f766e 100%);
-            overflow-x: hidden;
+{% block content %}
 
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
+<div class="profile-wrapper">
 
-        body::before, body::after {
-            content: "";
-            position: fixed;
-            width: 500px;
-            height: 500px;
-            filter: blur(160px);
-            z-index: -1;
-        }
+    <div class="profile-card">
 
-        body::before {
-            background: #38bdf8;
-            opacity: 0.15;
-            top: -120px;
-            left: -120px;
-        }
+        <!-- COVER -->
+        <div class="cover"></div>
 
-        body::after {
-            background: #22c55e;
-            opacity: 0.12;
-            bottom: -120px;
-            right: -120px;
-        }
+        <div class="profile-content">
 
-        .container {
-            width: 100%;
-            max-width: 420px;
-        }
+            {% set img = fundi.image %}
 
-        .card {
-            background: rgba(255,255,255,0.08);
-            backdrop-filter: blur(14px);
-            border: 1px solid rgba(255,255,255,0.12);
-            border-radius: 18px;
-            padding: 18px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.35);
-            text-align: center;
-            color: #e2e8f0;
-        }
+            <img
+                class="profile-image"
+                src="{{ url_for('static', filename='images/' + (img if img else 'default.png')) }}"
+            >
 
-        .profile-img {
-            width: 90px;
-            height: 90px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid rgba(255,255,255,0.2);
-            margin: 10px auto;
-        }
+            <!-- NAME -->
+            <div class="name-row">
 
-        /* ✅ FIXED H2 (background-clip safe) */
-        h2 {
-            font-size: 20px;
-            color: #ffffff;
+                <h2 class="profile-name">
+                    {{ fundi.name }}
+                </h2>
 
-            background: linear-gradient(90deg,#ffffff,#38bdf8,#22c55e);
-            -webkit-background-clip: text;
-            background-clip: text;
+                <div class="online-badge">
+                    ● Available
+                </div>
 
-            /* IMPORTANT FIX */
-            -webkit-text-fill-color: transparent;
-        }
-
-        /* fallback for old browsers */
-        @supports not (-webkit-background-clip: text) {
-            h2 {
-                background: none;
-                color: #ffffff;
-            }
-        }
-
-        /* extra Safari/WebView safety */
-        @media screen and (-webkit-min-device-pixel-ratio:0) {
-            h2 {
-                -webkit-text-fill-color: transparent;
-            }
-        }
-
-        .badge {
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            margin: 4px;
-            color: white;
-            display: inline-block;
-        }
-
-        .featured { background: linear-gradient(45deg,#facc15,#f59e0b); }
-        .boost { background: linear-gradient(45deg,#22c55e,#16a34a); }
-
-        .info {
-            margin-top: 12px;
-            text-align: left;
-            background: rgba(255,255,255,0.06);
-            padding: 12px;
-            border-radius: 12px;
-        }
-
-        .info p {
-            margin: 6px 0;
-        }
-
-        .skills {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 8px;
-        }
-
-        .skill {
-            background: rgba(56,189,248,0.18);
-            color: #ffffff;
-            padding: 6px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            white-space: nowrap;
-            border: 1px solid rgba(255,255,255,0.15);
-        }
-
-        .btn {
-            width: 100%;
-            padding: 12px;
-            margin-top: 10px;
-            border-radius: 12px;
-            font-weight: 600;
-            border: none;
-            cursor: pointer;
-        }
-
-        .btn-hire {
-            background: linear-gradient(135deg,#007bff,#00c6ff);
-            color: white;
-        }
-
-        .btn-wa {
-            background: linear-gradient(135deg,#25D366,#1ebe5d);
-            color: white;
-            text-decoration: none;
-            display: block;
-            text-align: center;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top:0;
-            left:0;
-            width:100%;
-            height:100%;
-            background: rgba(0,0,0,0.6);
-            justify-content:center;
-            align-items:center;
-        }
-
-        .modal-content {
-            background:white;
-            padding:20px;
-            border-radius:12px;
-            width:90%;
-            max-width:350px;
-        }
-
-        .modal-content input,
-        .modal-content textarea {
-            width:100%;
-            margin-top:10px;
-            padding:10px;
-            border-radius:8px;
-            border:1px solid #ccc;
-        }
-
-        .close {
-            float:right;
-            cursor:pointer;
-            font-size:20px;
-        }
-    </style>
-</head>
-
-<body>
-
-<div class="container">
-    <div class="card">
-
-        {% set img = fundi.image %}
-
-        {% if img and img != '' %}
-            <img src="{{ url_for('static', filename='images/' + img) }}" class="profile-img">
-        {% else %}
-            <img src="{{ url_for('static', filename='images/default.png') }}" class="profile-img">
-        {% endif %}
-
-        <h2>{{ fundi.name }}</h2>
-
-        {% if fundi.featured_until and fundi.featured_until > now %}
-            <span class="badge featured">⭐ Featured</span>
-        {% endif %}
-
-        {% if fundi.boost_until and fundi.boost_until > now %}
-            <span class="badge boost">🚀 Boosted</span>
-        {% endif %}
-
-        <div class="info">
-
-            <p><strong>Skills:</strong></p>
-
-            <div class="skills">
-                {% for skill in fundi.skills %}
-                    <span class="skill">{{ skill }}</span>
-                {% endfor %}
             </div>
 
-            <p><strong>Experience:</strong> {{ fundi.experience }}</p>
-            <p><strong>Location:</strong> {{ fundi.location }}</p>
-            <p><strong>Phone:</strong> {{ fundi.phone }}</p>
-            <p><strong>Email:</strong> {{ fundi.email }}</p>
+            <!-- LOCATION -->
+            <div class="location">
+                📍 {{ fundi.location if fundi.location else "Location not specified" }}
+            </div>
+
+            <!-- BADGES -->
+            <div class="badges">
+
+                {% if fundi.featured_until and fundi.featured_until > now %}
+                    <div class="badge featured">
+                        ⭐ Featured
+                    </div>
+                {% endif %}
+
+                {% if fundi.boost_until and fundi.boost_until > now %}
+                    <div class="badge boosted">
+                        🚀 Boosted
+                    </div>
+                {% endif %}
+
+            </div>
+
+            <!-- STATS -->
+            <div class="stats-grid">
+
+                <div class="stat-card">
+                    <div class="stat-number">
+                        {{ fundi.experience if fundi.experience else "0 Years" }}
+                    </div>
+                    <div class="stat-label">Experience</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-number">⭐ 4.9</div>
+                    <div class="stat-label">Rating</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-number">✓</div>
+                    <div class="stat-label">Available</div>
+                </div>
+
+            </div>
+
+            <!-- SKILLS -->
+            <div class="section">
+
+                <div class="section-title">
+                    🛠 Skills
+                </div>
+
+                <div class="skills">
+
+                    {% if fundi.skills %}
+
+                        {% if fundi.skills is string %}
+                            {% set skills_list = fundi.skills.split(",") %}
+                        {% else %}
+                            {% set skills_list = fundi.skills %}
+                        {% endif %}
+
+                        {% for skill in skills_list %}
+                            <div class="skill skill-text">
+                                {{ skill.strip().replace('_',' ').replace('-', ' ') }}
+                            </div>
+                        {% endfor %}
+
+                    {% else %}
+                        <div class="skill">No skills added</div>
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+            <!-- CONTACT INFO -->
+            <div class="section">
+
+                <div class="section-title">📋 Contact Info</div>
+
+                <div class="info-row">
+                    <div class="info-label">📞 Phone</div>
+                    <div class="info-value">{{ fundi.phone if fundi.phone else "Not available" }}</div>
+                </div>
+
+                <div class="info-row">
+                    <div class="info-label">📧 Email</div>
+                    <div class="info-value">{{ fundi.email if fundi.email else "Not available" }}</div>
+                </div>
+
+                <div class="info-row">
+                    <div class="info-label">📍 Location</div>
+                    <div class="info-value">{{ fundi.location if fundi.location else "Not specified" }}</div>
+                </div>
+
+            </div>
+
+            <!-- ACTION BUTTONS -->
+            <div class="action-buttons">
+
+                {% if fundi.phone %}
+
+                    <a href="{{ url_for('hire_fundi_form', fundi_id=fundi.id) }}" class="btn btn-hire">
+                        💼 Hire Me
+                    </a>
+
+                    <a
+                        href="https://wa.me/{{ fundi.phone|replace('+','')|replace(' ','') }}"
+                        target="_blank"
+                        class="btn btn-whatsapp"
+                    >
+                        💬 WhatsApp Chat
+                    </a>
+
+                {% endif %}
+
+            </div>
 
         </div>
 
-        <button class="btn btn-hire" onclick="openModal()">
-            💼 Hire Me
-        </button>
-
-        <a class="btn btn-wa"
-           href="https://wa.me/{{ fundi.phone | replace('+', '') }}?text=Habari%2C%20nimeona%20profile%20yako%20{{ fundi.name | urlencode }}%20na%20ningependa%20kukuajiri."
-           target="_blank">
-           💬 WhatsApp Chat
-        </a>
-
     </div>
+
 </div>
 
-<div class="modal" id="hireModal">
-    <div class="modal-content">
+<!-- ================= CSS ================= -->
+<style>
 
-        <span class="close" onclick="closeModal()">&times;</span>
+/* FLASH MESSAGES */
+.flash-message{
+    max-width:600px;
+    margin:15px auto;
+    padding:12px;
+    border-radius:10px;
+    text-align:center;
+    font-weight:600;
+    color:white;
+}
 
-        <form method="POST" action="{{ url_for('hire_fundi', fundi_id=fundi.id) }}">
+.flash-message.success{
+    background:#22c55e;
+}
 
-            <input type="text" name="name" placeholder="Your Name" required>
-            <input type="text" name="phone" placeholder="Phone Number" required>
-            <input type="text" name="location" placeholder="Location" required>
-            <textarea name="message" placeholder="Message"></textarea>
+.flash-message.error{
+    background:#ef4444;
+}
 
-            <button type="submit" class="btn btn-hire">
-                Send Request
-            </button>
+.flash-message.warning{
+    background:#f59e0b;
+}
 
-        </form>
+/* WRAPPER */
+.profile-wrapper{
+    max-width:650px;
+    margin:auto;
+    padding:20px;
+    padding-bottom:120px;
+}
 
-    </div>
-</div>
+/* CARD */
+.profile-card{
+    background:#0f172a;
+    border-radius:28px;
+    overflow:hidden;
+    border:1px solid rgba(255,255,255,0.08);
+    box-shadow:0 15px 40px rgba(0,0,0,0.35);
+}
+
+/* COVER */
+.cover{
+    height:160px;
+    background:linear-gradient(135deg,#0ea5e9,#2563eb,#22c55e);
+}
+
+/* CONTENT */
+.profile-content{
+    padding:0 20px 30px;
+    margin-top:-55px;
+}
+
+/* IMAGE */
+.profile-image{
+    width:110px;
+    height:110px;
+    border-radius:50%;
+    object-fit:cover;
+    border:5px solid #0f172a;
+    background:#1e293b;
+}
+
+/* NAME */
+.name-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:15px;
+}
+
+.profile-name{
+    color:white;
+    font-size:24px;
+    font-weight:700;
+}
+
+.online-badge{
+    color:#4ade80;
+    font-size:12px;
+}
+
+/* LOCATION */
+.location{
+    color:#cbd5e1;
+    margin-top:6px;
+    font-size:14px;
+}
+
+/* BADGES */
+.badges{
+    display:flex;
+    gap:10px;
+    margin-top:14px;
+}
+
+.badge{
+    padding:6px 12px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:700;
+}
+
+.featured{
+    background:#f59e0b;
+    color:white;
+}
+
+.boosted{
+    background:#22c55e;
+    color:white;
+}
+
+/* STATS */
+.stats-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    margin-top:22px;
+}
+
+.stat-card{
+    background:rgba(255,255,255,0.05);
+    padding:14px;
+    border-radius:16px;
+    text-align:center;
+}
+
+.stat-number{
+    color:white;
+    font-size:18px;
+    font-weight:700;
+}
+
+.stat-label{
+    color:#94a3b8;
+    font-size:12px;
+}
+
+/* SECTION */
+.section{
+    margin-top:22px;
+    background:rgba(255,255,255,0.04);
+    padding:16px;
+    border-radius:20px;
+}
+
+.section-title{
+    color:white;
+    font-weight:700;
+    margin-bottom:14px;
+}
+
+/* SKILLS */
+.skills{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+}
+
+.skill{
+    background:rgba(56,189,248,0.15);
+    color:#7dd3fc;
+    padding:8px 14px;
+    border-radius:12px;
+    font-size:13px;
+    font-weight:600;
+}
+
+/* INFO */
+.info-row{
+    display:flex;
+    justify-content:space-between;
+    padding:12px 0;
+    border-bottom:1px solid rgba(255,255,255,0.05);
+}
+
+.info-label{
+    color:#94a3b8;
+}
+
+.info-value{
+    color:white;
+    font-weight:600;
+}
+
+/* BUTTONS */
+.action-buttons{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-top:24px;
+}
+
+.btn{
+    padding:14px;
+    text-align:center;
+    border-radius:14px;
+    font-weight:700;
+    text-decoration:none;
+}
+
+.btn-hire{
+    background:#f59e0b;
+    color:white;
+}
+
+.btn-whatsapp{
+    background:#22c55e;
+    color:white;
+}
+
+/* MOBILE */
+@media(max-width:600px){
+    .stats-grid{
+        grid-template-columns:1fr;
+    }
+
+    .action-buttons{
+        grid-template-columns:1fr;
+    }
+
+    .name-row{
+        flex-direction:column;
+        align-items:flex-start;
+    }
+}
+
+</style>
 
 <script>
-function openModal(){
-    document.getElementById("hireModal").style.display = "flex";
-}
+document.addEventListener("DOMContentLoaded", function () {
+    const skills = document.querySelectorAll(".skill-text");
 
-function closeModal(){
-    document.getElementById("hireModal").style.display = "none";
-}
+    skills.forEach(el => {
+        let text = el.innerText;
+        text = text.replace(/([a-z])([A-Z])/g, '$1 $2');
+        text = text.replace(/_/g, " ");
+        el.innerText = text;
+    });
+});
 </script>
 
-</body>
-</html>
+{% endblock %}

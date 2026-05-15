@@ -1,202 +1,174 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Results - KaziConnect</title>
+{% extends "base.html" %}
 
-    <style>
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            margin: 0;
-            min-height: 100vh;
+{% block content %}
 
-            background: linear-gradient(
-                135deg,
-                #0f172a 0%,
-                #1e3a8a 40%,
-                #0f766e 100%
-            );
+<style>
 
-            overflow-x: hidden;
-        }
+.results-wrapper{
+    min-height: 100vh;
+    padding: 16px;
+    background: radial-gradient(circle at top,#0f172a,#020617);
+    color: white;
+}
 
-        body::before {
-            content: "";
-            position: fixed;
-            width: 500px;
-            height: 500px;
-            background: #38bdf8;
-            filter: blur(160px);
-            opacity: 0.15;
-            top: -120px;
-            left: -120px;
-            z-index: -1;
-        }
+/* HEADER */
+.results-header{
+    margin-bottom: 16px;
+}
 
-        body::after {
-            content: "";
-            position: fixed;
-            width: 500px;
-            height: 500px;
-            background: #22c55e;
-            filter: blur(160px);
-            opacity: 0.12;
-            bottom: -120px;
-            right: -120px;
-            z-index: -1;
-        }
+.results-title{
+    font-size: 18px;
+    font-weight: 800;
+}
 
-        .container {
-            max-width: 800px;
-            margin: 30px auto;
-            padding: 10px;
-        }
+.results-count{
+    font-size: 13px;
+    color: #94a3b8;
+    margin-top: 4px;
+}
 
-        /* ✅ SAFE GRADIENT TITLE (FIXED COMPATIBILITY) */
-        .title {
-            text-align: center;
-            font-size: 26px;
-            margin-bottom: 5px;
+/* CARD */
+.card{
 
-            color: #ffffff; /* fallback */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 
-            background: linear-gradient(90deg,#ffffff,#38bdf8,#22c55e);
+    padding: 14px;
+    margin-bottom: 12px;
 
-            -webkit-background-clip: text;
-            background-clip: text;
+    border-radius: 14px;
 
-            -webkit-text-fill-color: transparent;
-        }
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(18px);
 
-        /* fallback for browsers that don't support text-fill */
-        @supports not (-webkit-text-fill-color: transparent) {
-            .title {
-                color: #ffffff;
-                background: none;
-            }
-        }
+    border: 1px solid rgba(255,255,255,0.08);
 
-        .subtitle {
-            text-align: center;
-            color: #cbd5e1;
-            margin-bottom: 20px;
-        }
+    transition: 0.2s;
+}
 
-        .fundi-item {
-            background: rgba(255,255,255,0.08);
-            backdrop-filter: blur(14px);
-            border: 1px solid rgba(255,255,255,0.12);
+.card:hover{
+    transform: translateY(-2px);
+}
 
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+/* LEFT SIDE */
+.left{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
 
-            padding: 14px 16px;
-            margin: 10px 0;
-            border-radius: 16px;
+/* NAME */
+.name{
+    font-size: 15px;
+    font-weight: 700;
+}
 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
-            color: #e2e8f0;
-        }
+/* ICONS */
+.icon{
+    font-size: 14px;
+}
 
-        .left {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+/* BUTTON */
+.view-btn{
 
-        .number {
-            font-weight: bold;
-            color: #94a3b8;
-            width: 25px;
-        }
+    text-decoration: none;
 
-        .name {
-            font-size: 16px;
-            font-weight: 600;
-        }
+    padding: 8px 12px;
 
-        .view-btn {
-            background: linear-gradient(90deg,#38bdf8,#22c55e);
-            color: white;
-            padding: 8px 14px;
-            border-radius: 10px;
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: 600;
-        }
+    border-radius: 10px;
 
-        .featured-badge {
-            background: linear-gradient(45deg, #FFD700, #FFA500);
-            color: white;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            margin-left: 6px;
-        }
+    font-size: 12px;
+    font-weight: bold;
 
-        .boosted {
-            color: #fbbf24;
-            font-weight: bold;
-            margin-left: 6px;
-            font-size: 13px;
-        }
+    color: white;
 
-        .no-results {
-            text-align: center;
-            color: #f87171;
-            font-weight: bold;
-            margin-top: 50px;
-        }
-    </style>
-</head>
+    background: linear-gradient(135deg,#38bdf8,#22c55e);
 
-<body>
+    white-space: nowrap;
+}
 
-{% if results|length > 0 %}
+/* EMPTY */
+.empty{
+    text-align: center;
+    margin-top: 60px;
+    color: #94a3b8;
+}
 
-<div class="container">
+/* MOBILE */
+@media(max-width:600px){
 
-    <h2 class="title">Search Results</h2>
+    .card{
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
 
-    <div class="subtitle">
-        🔍 Found {{ results|length }} fundi
-    </div>
+    .view-btn{
+        width: 100%;
+        text-align: center;
+    }
+}
 
-    {% for fundi in results %}
+</style>
 
-    <div class="fundi-item">
+<div class="results-wrapper">
 
-        <div class="left">
-            <div class="number">{{ loop.index }}.</div>
+    <!-- HEADER -->
+    <div class="results-header">
 
-            <div class="name">
-                {{ fundi.name }}
-
-                {% if fundi.boost_until and fundi.boost_until > now %}
-                    <span class="boosted">🔥 Boosted</span>
-                {% elif fundi.featured_until and fundi.featured_until > now %}
-                    <span class="featured-badge">⭐ Featured</span>
-                {% endif %}
-            </div>
+        <div class="results-title">
+            🔍 Search Results
         </div>
 
-        <a class="view-btn" href="{{ url_for('profile', id=fundi.id) }}">
-            View Profile
-        </a>
+        <div class="results-count">
+            👷 {{ results|length }} mafundi wamepatikana
+        </div>
 
     </div>
 
-    {% endfor %}
+    <!-- RESULTS -->
+    {% if results and results|length > 0 %}
+
+        {% for fundi in results %}
+
+        <div class="card">
+
+            <!-- LEFT SIDE -->
+            <div class="left">
+
+                <!-- ICON ONLY (NO TEXT BADGES) -->
+                {% if fundi.boost_until and fundi.boost_until > now %}
+                    <span class="icon">🚀</span>
+
+                {% elif fundi.featured_until and fundi.featured_until > now %}
+                    <span class="icon">⭐</span>
+                {% endif %}
+
+                <!-- NAME -->
+                <div class="name">
+                    {{ fundi.name }}
+                </div>
+
+            </div>
+
+            <!-- BUTTON (IN FRONT SIDE OF ROW) -->
+            <a class="view-btn" href="{{ url_for('profile', id=fundi.id) }}">
+                View Profile
+            </a>
+
+        </div>
+
+        {% endfor %}
+
+    {% else %}
+
+        <div class="empty">
+            😕 No results found
+        </div>
+
+    {% endif %}
 
 </div>
 
-{% else %}
-
-<div class="no-results">
-    ❌ No matching fundi found
-</div>
-
-{% endif %}
-
-</body>
-</html>
+{% endblock %}

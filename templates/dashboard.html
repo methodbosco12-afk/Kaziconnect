@@ -2,191 +2,179 @@
 
 {% block content %}
 
-<!-- 🎨 PARTICLE BACKGROUND -->
 <style>
+
+/* =========================
+   GLOBAL RESET (MOBILE FIRST)
+========================= */
 body {
     margin: 0;
-    overflow-x: hidden;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    color: #fff;
 }
 
-/* 🌌 HERO BACKGROUND */
+/* reduce animation for mobile performance */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+/* =========================
+   HERO SECTION
+========================= */
 .hero {
-    position: relative;
     text-align: center;
-    padding: 80px 20px 40px;
-    overflow: hidden;
+    padding: 50px 20px 30px;
 }
 
-/* ✨ PARTICLES */
-.particle {
-    position: absolute;
-    width: 6px;
-    height: 6px;
-    background: rgba(255,255,255,0.6);
-    border-radius: 50%;
-    animation: float 10s linear infinite;
-}
-
-@keyframes float {
-    0% {
-        transform: translateY(100vh) scale(0.5);
-        opacity: 0;
-    }
-    50% {
-        opacity: 1;
-    }
-    100% {
-        transform: translateY(-10vh) scale(1);
-        opacity: 0;
-    }
-}
-
-/* 🎯 GRADIENT TITLE */
 .hero h1 {
-    font-size: 34px;
+    font-size: 26px;
+    font-weight: 700;
     margin-bottom: 10px;
-
-    background: linear-gradient(90deg, #ffffff, #38bdf8, #22c55e);
-
-    background-clip: text;
-    -webkit-background-clip: text;
-
-    color: transparent;
-    -webkit-text-fill-color: transparent;
+    color: #ffffff;
 }
 
 .hero p {
+    font-size: 15px;
     color: #cbd5e1;
-    font-size: 16px;
+    margin: 0;
 }
 
-/* 📦 CONTAINER */
+/* =========================
+   CONTAINER
+========================= */
 .container {
-    max-width: 900px;
+    max-width: 1000px;
     margin: auto;
     padding: 20px;
 }
 
-/* 🔲 GRID */
+/* =========================
+   GRID (MOBILE FIRST)
+========================= */
 .grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: 1fr;
     gap: 15px;
-    margin-top: 30px;
+    margin-top: 25px;
 }
 
-/* 🧊 CARD */
-.card {
-    background: rgba(255,255,255,0.08);
-    backdrop-filter: blur(12px);
-    border-radius: 16px;
-    padding: 22px;
-    text-align: center;
-    transition: 0.3s;
-}
-
-.card:hover {
-    transform: translateY(-6px);
-    background: rgba(255,255,255,0.15);
-}
-
-.card a {
-    text-decoration: none;
-    color: white;
-    font-size: 18px;
-    font-weight: bold;
-    display: block;
-}
-
-/* 🎨 COLORS */
-.blue { border: 1px solid #38bdf8; }
-.green { border: 1px solid #22c55e; }
-.darkblue { border: 1px solid #3b82f6; }
-
-/* 🌐 SOCIAL MEDIA */
-.social-footer {
-    margin-top: 70px;
-    padding: 30px 20px;
-    text-align: center;
-    background: rgba(255,255,255,0.05);
-    backdrop-filter: blur(10px);
-    border-top: 1px solid rgba(255,255,255,0.1);
-    border-radius: 20px 20px 0 0;
-}
-
-.social-footer h3 {
-    color: white;
-    margin-bottom: 20px;
-}
-
-.social-links {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 15px;
-}
-
-.social-links a {
-    text-decoration: none;
-    color: white;
-    padding: 12px 18px;
-    border-radius: 12px;
-    font-weight: bold;
-    transition: 0.3s;
-}
-
-.social-links a:hover {
-    transform: scale(1.05);
-}
-
-/* 🎨 SOCIAL COLORS */
-.facebook {
-    background: #1877f2;
-}
-
-.instagram {
-    background: #e1306c;
-}
-
-.linkedin {
-    background: #0077b5;
-}
-
-.tiktok {
-    background: #000000;
-}
-
-/* 📱 MOBILE */
-@media (max-width: 768px) {
+/* desktop upgrade */
+@media (min-width: 768px) {
     .grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(3, 1fr);
     }
 
     .hero h1 {
-        font-size: 24px;
+        font-size: 34px;
     }
 }
+
+/* =========================
+   CARD DESIGN (PROFESSIONAL SaaS STYLE)
+========================= */
+.card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 14px;
+    padding: 20px;
+    text-align: center;
+    transition: 0.25s ease;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    background: rgba(255,255,255,0.10);
+}
+
+/* clickable full card */
+.card a {
+    text-decoration: none;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    display: block;
+}
+
+/* =========================
+   BUTTON COLORS (SUBTLE, PROFESSIONAL)
+========================= */
+.blue { border-left: 4px solid #38bdf8; }
+.green { border-left: 4px solid #22c55e; }
+.darkblue { border-left: 4px solid #3b82f6; }
+
+/* =========================
+   SOCIAL SECTION (CLEAN FOOTER STYLE)
+========================= */
+.social-footer {
+    margin-top: 50px;
+    padding: 25px 15px;
+    text-align: center;
+    background: rgba(255,255,255,0.04);
+    border-radius: 16px;
+}
+
+.social-footer h3 {
+    font-size: 16px;
+    margin-bottom: 15px;
+    color: #fff;
+}
+
+/* social buttons */
+.social-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+}
+
+.social-links a {
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    text-decoration: none;
+    color: #fff;
+    font-weight: 500;
+}
+
+/* brand colors */
+.facebook { background: #1877f2; }
+.instagram { background: #e1306c; }
+.linkedin { background: #0077b5; }
+.tiktok { background: #111; }
+
+/* =========================
+   MOBILE OPTIMIZATION
+========================= */
+@media (max-width: 480px) {
+    .hero h1 {
+        font-size: 22px;
+    }
+
+    .card a {
+        font-size: 15px;
+    }
+
+    .social-links a {
+        width: 100%;
+        text-align: center;
+    }
+}
+
 </style>
 
-<!-- 🌌 PARTICLES GENERATOR -->
+<!-- HERO -->
 <div class="hero">
-
-    <!-- particles -->
-    <div class="particle" style="left:10%; animation-delay:0s;"></div>
-    <div class="particle" style="left:20%; animation-delay:2s;"></div>
-    <div class="particle" style="left:30%; animation-delay:4s;"></div>
-    <div class="particle" style="left:40%; animation-delay:1s;"></div>
-    <div class="particle" style="left:50%; animation-delay:3s;"></div>
-    <div class="particle" style="left:60%; animation-delay:5s;"></div>
-    <div class="particle" style="left:70%; animation-delay:2.5s;"></div>
-    <div class="particle" style="left:80%; animation-delay:1.5s;"></div>
-    <div class="particle" style="left:90%; animation-delay:3.5s;"></div>
-
     <h1>🔥 Karibu KaziConnect</h1>
     <p>Pata kazi au fundi kwa haraka na kwa urahisi</p>
-
 </div>
 
+<!-- MAIN -->
 <div class="container">
 
     <div class="grid">
@@ -205,40 +193,32 @@ body {
 
     </div>
 
-    <!-- 🌐 SOCIAL MEDIA -->
+    <!-- SOCIAL -->
     <div class="social-footer">
 
         <h3>🌐 Tufollow Kwenye Social Media</h3>
 
         <div class="social-links">
 
-            <a href="https://facebook.com/kaziconnectTz"
-               target="_blank"
-               class="facebook">
-               Facebook: @kaziconnectTz
+            <a class="facebook" href="https://facebook.com/kaziconnectTz" target="_blank">
+                Facebook
             </a>
 
-            <a href="https://instagram.com/kaziconnecttz"
-               target="_blank"
-               class="instagram">
-               Instagram: @kaziconnectofficial
+            <a class="instagram" href="https://instagram.com/kaziconnecttz" target="_blank">
+                Instagram
             </a>
 
-            <a href="https://www.linkedin.com/in/method-john-8149553b9"
-               target="_blank"
-               class="linkedin">
-               LinkedIn: Method John
+            <a class="linkedin" href="https://www.linkedin.com/in/method-john-8149553b9" target="_blank">
+                LinkedIn
             </a>
 
-            <a href="https://tiktok.com/@kaziconnectofficial"
-               target="_blank"
-               class="tiktok">
-               TikTok: @kaziconnectofficial
+            <a class="tiktok" href="https://tiktok.com/@kaziconnectofficial" target="_blank">
+                TikTok
             </a>
 
         </div>
 
-        <p style="margin-top:20px; color:#cbd5e1;">
+        <p style="margin-top:15px; font-size:12px; color:#94a3b8;">
             © 2026 KaziConnect Tanzania
         </p>
 

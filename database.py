@@ -1,3 +1,6 @@
-from flask_sqlalchemy import SQLAlchemy
+# database.py
 
-db = SQLAlchemy()
+# This file should NOT create a new SQLAlchemy instance
+# It only re-exports the main one from extensions
+
+from extensions import db

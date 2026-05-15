@@ -39,15 +39,16 @@ class FundiProfile(db.Model):
     )
 
     name = db.Column(db.String(100))
-    skills = db.Column(ARRAY(db.String))
+    skills = db.Column(db.Text)
     experience = db.Column(db.String(200))
     phone = db.Column(db.String(20))
     email = db.Column(db.String(100))
     image = db.Column(db.String(200))
     location = db.Column(db.String(100))
 
-    featured_until = db.Column(db.DateTime)
-    boost_until = db.Column(db.DateTime)
+    featured_until = db.Column(db.DateTime(timezone=True))
+    boost_until = db.Column(db.DateTime(timezone=True))
+    
 
     # 🔥 ADD THIS
     featured_requests = db.relationship(
@@ -78,7 +79,7 @@ class FeaturedRequest(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
-    fundi_id = db.Column(
+    fundi_profile_id = db.Column(
     db.Integer,
     db.ForeignKey('fundi_profile.id', ondelete='CASCADE')
 )
@@ -90,7 +91,7 @@ class FeaturedRequest(db.Model):
     status = db.Column(db.String(20), default="pending")
     type = db.Column(db.String(20))  # featured / boost
 
-    created_at = db.Column(db.DateTime, default=utc_now)
+    created_at = db.Column(db.DateTime(timezone=True), default=utc_now)
 
 
 # 🔐 OTP SYSTEM
@@ -100,8 +101,8 @@ class OTP(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
     identifier = db.Column(db.String(120), nullable=False)
-    otp = db.Column(db.String(255), nullable=False)  # hashed OTP
-    expiry = db.Column(db.Float, nullable=False)
+    otp = db.Column(db.String(255), nullable=False)
+    expiry = db.Column(db.DateTime(timezone=True), nullable=False)
     resends = db.Column(db.Integer, default=0)
 
 
@@ -112,7 +113,7 @@ class ContactUnlock(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
     contractor_id = db.Column(db.Integer, nullable=False)
-    fundi_id = db.Column(db.Integer, nullable=False)
+    fundi_profile_id = db.Column(db.Integer, nullable=False)
 
     amount = db.Column(db.Integer, default=300)
 
@@ -124,8 +125,8 @@ class ContactUnlock(db.Model):
 
     is_paid = db.Column(db.Boolean, default=False)
 
-    created_at = db.Column(db.DateTime, default=utc_now)
-    expires_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime(timezone=True), default=utc_now)
+    expires_at = db.Column(db.DateTime(timezone=True), nullable=True)
 
 
 # 🧾 ADMIN LOGS
@@ -137,7 +138,7 @@ class ActivityLog(db.Model):
     user_id = db.Column(db.Integer)
     action = db.Column(db.String(200))
 
-    timestamp = db.Column(db.DateTime, default=utc_now)
+    timestamp = db.Column(db.DateTime(timezone=True), default=utc_now)
 
 
 # 🔒 IP BLOCKING (ANTI-BRUTE FORCE)
@@ -145,16 +146,14 @@ class IpBlock(db.Model):
     __tablename__ = "ip_block"
 
     id = db.Column(db.Integer, primary_key=True)
-
     ip = db.Column(db.String(50), unique=True, nullable=False)
 
     attempts = db.Column(db.Integer, default=0)
-    last_attempt = db.Column(db.Float)
-    blocked_until = db.Column(db.Float, nullable=True)
 
-    created_at = db.Column(db.DateTime, default=utc_now)
-    count = db.Column(db.Integer, default=5)
+    last_attempt = db.Column(db.DateTime(timezone=True), nullable=True)
+    blocked_until = db.Column(db.DateTime(timezone=True), nullable=True)
 
+    created_at = db.Column(db.DateTime(timezone=True), default=utc_now)
 
 # 🧾 PROFILE UPDATE LOG
 class ProfileUpdate(db.Model):
@@ -162,7 +161,7 @@ class ProfileUpdate(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
-    fundi_id = db.Column(
+    fundi_profile_id = db.Column(
     db.Integer,
     db.ForeignKey('fundi_profile.id', ondelete='CASCADE')
 )
@@ -171,7 +170,7 @@ class ProfileUpdate(db.Model):
     old_value = db.Column(db.String(255))
     new_value = db.Column(db.String(255))
 
-    created_at = db.Column(db.DateTime, default=utc_now)
+    created_at = db.Column(db.DateTime(timezone=True), default=utc_now)
 
 
 class SupportMessage(db.Model):
@@ -183,7 +182,7 @@ class SupportMessage(db.Model):
     phone = db.Column(db.String(20))
     subject = db.Column(db.String(150))
     message = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime(timezone=True), default=utc_now)
 
 class Notification(db.Model):
     __tablename__ = "notifications"
@@ -199,7 +198,7 @@ class Notification(db.Model):
 
     is_read = db.Column(db.Boolean, default=False)
 
-    created_at = db.Column(db.DateTime, default=utc_now)
+    created_at = db.Column(db.DateTime(timezone=True), default=utc_now)
 
 class HireRequest(db.Model):
     __tablename__ = "hire_request"
@@ -207,17 +206,25 @@ class HireRequest(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
     fundi_profile_id = db.Column(
+        db.Integer,
+        db.ForeignKey('fundi_profile.id', ondelete='CASCADE'),
+        nullable=False
+    )
+    contractor_id = db.Column(
     db.Integer,
-    db.ForeignKey('fundi_profile.id', ondelete='CASCADE'),
+    db.ForeignKey("users.id"),
     nullable=False
 )
-
     client_name = db.Column(db.String(100), nullable=False)
     phone = db.Column(db.String(20), nullable=False)
     location = db.Column(db.String(100), nullable=False)
-
     message = db.Column(db.Text, nullable=False)
 
-    status = db.Column(db.String(20), default="pending")  # pending, accepted, rejected
+    status = db.Column(db.String(20), default="pending")
+    created_at = db.Column(db.DateTime(timezone=True), default=utc_now)
 
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+class Contractor(db.Model):
+    __tablename__ = "contractors"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100))

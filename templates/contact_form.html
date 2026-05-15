@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Form - KaziConnect</title>
+
+    <style>
+
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+        }
+
+        body{
+            font-family:'Segoe UI',sans-serif;
+            min-height:100vh;
+
+            display:flex;
+            justify-content:center;
+            align-items:center;
+
+            padding:20px;
+
+            background:linear-gradient(
+                135deg,
+                #0f172a 0%,
+                #1e3a8a 45%,
+                #0f766e 100%
+            );
+
+            overflow-x:hidden;
+            position:relative;
+        }
+
+        body::before{
+            content:"";
+            position:absolute;
+            width:350px;
+            height:350px;
+            background:#38bdf8;
+            border-radius:50%;
+            filter:blur(120px);
+            opacity:.18;
+            top:-120px;
+            left:-120px;
+            z-index:0;
+        }
+
+        body::after{
+            content:"";
+            position:absolute;
+            width:350px;
+            height:350px;
+            background:#22c55e;
+            border-radius:50%;
+            filter:blur(120px);
+            opacity:.15;
+            bottom:-120px;
+            right:-120px;
+            z-index:0;
+        }
+
+        .card{
+            width:100%;
+            max-width:480px;
+
+            background:rgba(255,255,255,0.08);
+            backdrop-filter:blur(14px);
+
+            border:1px solid rgba(255,255,255,0.12);
+
+            border-radius:24px;
+
+            padding:28px 22px;
+
+            box-shadow:0 10px 35px rgba(0,0,0,0.35);
+
+            position:relative;
+            z-index:2;
+        }
+
+        h1{
+            text-align:center;
+            font-size:30px;
+            margin-bottom:8px;
+
+            background:linear-gradient(
+                90deg,
+                #ffffff,
+                #38bdf8,
+                #22c55e
+            );
+
+            background-clip:text;
+            -webkit-background-clip:text;
+
+            color:transparent;
+            -webkit-text-fill-color:transparent;
+        }
+
+        .subtitle{
+            text-align:center;
+            color:#cbd5e1;
+            font-size:15px;
+            margin-bottom:24px;
+            line-height:1.5;
+        }
+
+        .channel-badge{
+            width:fit-content;
+            margin:auto;
+            margin-bottom:22px;
+
+            padding:10px 18px;
+
+            border-radius:999px;
+
+            font-size:14px;
+            font-weight:600;
+            color:white;
+        }
+
+        .whatsapp-badge{
+            background:linear-gradient(90deg,#22c55e,#25D366);
+        }
+
+        .email-badge{
+            background:linear-gradient(90deg,#3b82f6,#60a5fa);
+        }
+
+        form{
+            display:flex;
+            flex-direction:column;
+            gap:15px;
+        }
+
+        .input-group{
+            display:flex;
+            flex-direction:column;
+            gap:7px;
+        }
+
+        label{
+            color:#e2e8f0;
+            font-size:14px;
+            font-weight:500;
+        }
+
+        input,
+        textarea{
+            width:100%;
+            border:none;
+            outline:none;
+
+            border-radius:16px;
+
+            padding:14px 15px;
+
+            font-size:15px;
+
+            background:rgba(255,255,255,0.10);
+            color:white;
+
+            border:1px solid rgba(255,255,255,0.08);
+
+            transition:.3s;
+        }
+
+        input::placeholder,
+        textarea::placeholder{
+            color:#cbd5e1;
+        }
+
+        input:focus,
+        textarea:focus{
+            border-color:#38bdf8;
+            background:rgba(255,255,255,0.14);
+        }
+
+        textarea{
+            min-height:140px;
+            resize:none;
+        }
+
+        .submit-btn{
+            margin-top:8px;
+
+            border:none;
+            cursor:pointer;
+
+            padding:15px;
+
+            border-radius:18px;
+
+            font-size:16px;
+            font-weight:700;
+
+            color:white;
+
+            background:linear-gradient(
+                90deg,
+                #38bdf8,
+                #22c55e
+            );
+
+            transition:.3s;
+        }
+
+        .submit-btn:hover{
+            transform:translateY(-2px);
+        }
+
+        .back-btn{
+            display:block;
+            text-align:center;
+
+            margin-top:18px;
+
+            text-decoration:none;
+            color:#cbd5e1;
+
+            font-size:14px;
+        }
+
+        .back-btn:hover{
+            color:white;
+        }
+
+        @media(max-width:600px){
+
+            body{
+                padding:14px;
+                align-items:flex-start;
+            }
+
+            .card{
+                padding:24px 18px;
+                border-radius:20px;
+            }
+
+            h1{
+                font-size:25px;
+            }
+
+            input,
+            textarea{
+                font-size:16px;
+            }
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <div class="card">
+
+        <h1>📨 Contact Support</h1>
+
+        <p class="subtitle">
+            Tuma ujumbe wako kwa KaziConnect support team
+        </p>
+
+        <div class="channel-badge {% if channel == 'whatsapp' %}whatsapp-badge{% else %}email-badge{% endif %}">
+
+            {% if channel == "whatsapp" %}
+                💬 WhatsApp Support
+            {% else %}
+                📧 Email Support
+            {% endif %}
+
+        </div>
+
+        <form method="POST" action="{{ url_for('send_support_message') }}">
+
+            <input type="hidden" name="channel" value="{{ channel }}">
+
+            <div class="input-group">
+                <label>Jina lako</label>
+
+                <input
+                    type="text"
+                    name="name"
+                    placeholder="Ingiza jina lako"
+                    required
+                >
+            </div>
+
+            <div class="input-group">
+                <label>Namba ya simu</label>
+
+                <input
+                    type="text"
+                    name="phone"
+                    placeholder="+2557XXXXXXXX"
+                >
+            </div>
+
+            <div class="input-group">
+                <label>Kichwa cha ujumbe</label>
+
+                <input
+                    type="text"
+                    name="subject"
+                    placeholder="Mfano: Tatizo la account"
+                    required
+                >
+            </div>
+
+            <div class="input-group">
+                <label>Ujumbe wako</label>
+
+                <textarea
+                    name="message"
+                    placeholder="Andika ujumbe wako hapa..."
+                    required
+                ></textarea>
+            </div>
+
+            <button type="submit" class="submit-btn">
+                🚀 Tuma Ujumbe
+            </button>
+
+        </form>
+
+        <a href="{{ url_for('contact') }}" class="back-btn">
+            ← Rudi nyuma
+        </a>
+
+    </div>
+
+</body>
+</html>
